@@ -1,3 +1,6 @@
+import java.util.Random;
+import java.util.Scanner;
+
 
 public class PlayerSkeleton {
 	public String printArrInt(int[] arr){
@@ -8,7 +11,7 @@ public class PlayerSkeleton {
 		s+="},";
 		return s;
 	}
-	public String printArrDouble(double[] arr){
+	public static String printArrDouble(double[] arr){
 		String s="";
 		for(int i=0; i<arr.length; i++){
 			s+=arr[i]+" ";
@@ -38,19 +41,28 @@ public class PlayerSkeleton {
 		}
 		return hdiff;
 	}
-	public double getHeightDeviation (State s){
-		double avgHeight = 0; 
-		double var = 0;
+	public double getHeightMean (State s){
 		int h[] = s.getTop();
+		double sum = 0;
 		for(int i=0; i<h.length; i++){
-			avgHeight+=h[i];
+			sum += h[i];
 		}
-		avgHeight/=h.length;
-		for(int i=0; i<h.length; i++){
-			var+=(h[i]-avgHeight)*(h[i]-avgHeight);
-		}
-		return var/h.length;
+		return sum/h.length;
 	}
+	public double getHeightStd (State s){
+		int h[] = s.getTop();
+		double sum = 0;
+		for(int i=0; i<h.length; i++){
+			sum += h[i];
+		}
+		double mean = sum/h.length;
+		double var = 0;
+		for(int i=0; i<h.length; i++){
+			var += (h[i]-mean)*(h[i]-mean);
+		}
+		return Math.sqrt(var/h.length);
+	}
+
 	public int getMaxHeight (State s){
 		int h[] = s.getTop();
 		int max = h[0];
@@ -104,121 +116,80 @@ public class PlayerSkeleton {
 		}
 		return count;
 	}
-/*	public int calcHolesConverted(int[] grid)
-	{
-	    int gridMask      = (1 << xsize) - 1;
-	    int underMask     = 0;
-	    int lNeighborMask = 0;
-	    int rNeighborMask = 0;
-	    int foundHoles    = 0;
 
-	    for (int y = 0; y < ysize; y++) {
-	        int line   = grid[y];
-	        int filled = ~line & gridMask;
 
-	        underMask     |= filled;
-	        lNeighborMask |= (filled << 1);
-	        rNeighborMask |= (filled >> 1);
+	public double evaluate1(State s, State os, double[] weights){
+		int[] heights 		= getColumnHeights(s);
+		int[] heightDiff 	= getHeightDiff(s);
+		int maxHeight 		= getMaxHeight(s);
+		int holeIncreased 	= getHoleCount(s.getField())-getHoleCount(os.getField());
+		
+		int numFeatures = 22;
+		int[] features = new int[numFeatures];
+		System.arraycopy(heights, 0, features, 0, heights.length);
+		System.arraycopy(heightDiff, 0, features, heights.length, heightDiff.length);
+		features[features.length-3]=maxHeight;
+		features[features.length-2]=holeIncreased;
+		features[features.length-1]=1;
+		
+		double V = 0;
+		for(int i=0; i<heights.length; i++){
+			V+=features[i]*weights[0];
+		}
+		for(int i=heights.length; i<heights.length+heightDiff.length; i++){
+			V+=features[i]*weights[1];
+		}
+		V+=features[features.length-3]*weights[weights.length-3];
+		V+=features[features.length-2]*weights[weights.length-2];
+		V+=features[features.length-1]*weights[weights.length-1];
+		return V;
+	}
+	public double evaluate2(State s, State os, double[] weights){
 
-	        foundHoles += setOnes1024[underMask & line] +
-	                      setOnes1024[lNeighborMask & line] +
-	                      setOnes1024[rNeighborMask & line];
-	    }
-	    return foundHoles;
-	}*/
-	//implement this function to have a working system
+		int numFeatures 	= 5;
+		double[] features 	= new double[numFeatures];
+		features[0]			= getHeightMean(s);
+		features[1]			= getHeightStd(s);
+		features[2]			= getMaxHeight(s);
+		features[3]			= getHoleCount(s.getField())-getHoleCount(os.getField());
+		features[4]			= 1;	//bias term
+		//System.out.println(printArrDouble(features));
+		//double[] weights 	= {-0.0, -0.8, -0.1, -0.1, -0.0};
+		
+		double V = 0;
+		for(int i=0; i<features.length; i++){
+			V+=features[i]*weights[i];
+		}
+		return V;
+	}
 	
-	public double[] getWeights(State s, int seg1Len, int seg2Len){
-		double[] weights = new double[seg1Len+seg2Len+2+1];
-		//base weight
-		weights[0]=0;
-		
-		//height should be small for good
-		for(int i=1; i<=seg1Len; i++){
-			weights[i]= -0.1/seg1Len;
-		}
-		
-		//height difference should be small for good
-		for(int i=seg1Len+1; i<=seg1Len+seg2Len; i++){
-			weights[i]= -0.07/seg2Len;
-		}
-		
-		//when maxHeight is touching ceiling, evaluation function should give value approaching 0 or less
-		weights[seg1Len+seg2Len+1]= -0.01;//-0.01/s.ROWS; //(s.ROWS-4);
-		
-		//num of holes should be small
-		weights[seg1Len+seg2Len+2]= -0.01;//-0.1;
-
-		return weights;
-	}
-	public double evaluate(State s){
-		int[] heights = getColumnHeights(s);
-		int[] heightDiff = getHeightDiff(s);
-		int maxHeight = getMaxHeight(s);
-		int numHole = getHoleCount(s.getField());
-		
-		int numFeatures = 21;
-		int[] features = new int[numFeatures];
-		double[] weights = getWeights(s, heights.length, heightDiff.length);
-		System.arraycopy(heights, 0, features, 0, heights.length);
-		System.arraycopy(heightDiff, 0, features, heights.length, heightDiff.length);
-		features[features.length-2]=maxHeight;
-		features[features.length-1]=numHole;
-
-		double V = weights[0];
-		for(int i=0; i<features.length; i++){
-			V+=features[i]*weights[i+1];
-		}
-		return V;
-	}
-	public double evaluatePrint(State s){
-		int[] heights = getColumnHeights(s);
-		int[] heightDiff = getHeightDiff(s);
-		int maxHeight = getMaxHeight(s);
-		int numHole = getHoleCount(s.getField());
-		
-		int numFeatures = 21;
-		int[] features = new int[numFeatures];
-		double[] weights = getWeights(s, heights.length, heightDiff.length);
-		System.arraycopy(heights, 0, features, 0, heights.length);
-		System.arraycopy(heightDiff, 0, features, heights.length, heightDiff.length);
-		features[features.length-2]=maxHeight;
-		features[features.length-1]=numHole;
-
-		double V = weights[0];
-		for(int i=0; i<features.length; i++){
-			V+=features[i]*weights[i+1];
-		}
-		System.out.println("col heights = "+printArrInt(heights));
-		System.out.println("height diff = "+printArrInt(heightDiff));
-		System.out.println("max height  = "+maxHeight);
-		System.out.println("num of hole = "+numHole);
-		System.out.println("features    = "+printArrInt(features));
-		System.out.println("weights     = "+printArrDouble(weights));
-		System.out.println("V = "+V);
-		return V;
-	}
-	public int pickMove(State s, int[][] legalMoves) {
+	public int pickMove(State s, int[][] legalMoves, double[] weights) {
 
 		double maxU = -1000000;
 		double maxV = 0;
 		int maxR =0;
 		int maxUAction = 0;
+		
 		for(int i=0; i<legalMoves.length; i++){
-
+			//simulate a move
 			SimState ss = new SimState();
 			ss.setField(s.getField());
 			ss.setNextPiece(s.getNextPiece());
 			ss.setTop(s.getTop());
 			ss.makeMove(legalMoves[i]);
+			
+			//avoid lost move
 			if(ss.hasLost()){
-				System.out.println("lost move idx = "+i);
+				//System.out.println("lost move idx = "+i);
 				continue;
 			}
 			
-			double V = evaluate(ss);
+			//evaluate move
+			double V = evaluate1(ss, s, weights);
 			int R = ss.getRowsCleared();
 			double U = R+V;
+			
+			//update selection
 			if(U>maxU){
 				maxU = U;
 				maxUAction = i;
@@ -226,40 +197,95 @@ public class PlayerSkeleton {
 				maxR = R;
 			}
 		}
-		System.out.println("Action = "+ printArrInt(legalMoves[maxUAction]));
-		System.out.println ("Action="+maxUAction+" U="+maxU+" R="+maxR+" V="+maxV);
-		/*
-		SimState ss = new SimState();
-		ss.setField(s.getField());
-		ss.setNextPiece(s.getNextPiece());
-		ss.setTop(s.getTop());
-		ss.makeMove(legalMoves[maxUAction]);
-		int[][]field = ss.getField();
-		//for(int i=0; i<field.length; i++)
-		//	System.out.println(printArrInt(field[i]));
-		evaluatePrint(ss);*/
+		//System.out.println("Action = "+ printArrInt(legalMoves[maxUAction]));
+		//System.out.println ("Action="+maxUAction+" U="+maxU+" R="+maxR+" V="+maxV);
 		
 		return maxUAction;
 	}
 	
-	public static void main(String[] args) {
-		State s = new State();
-		new TFrame(s);
-		PlayerSkeleton p = new PlayerSkeleton();
-		int score =0;
-		while(!s.hasLost()) {
-			score++;
-			System.out.println("====move "+score+"====");
-			s.makeMove(p.pickMove(s,s.legalMoves()));
-			s.draw();
-			s.drawNext(0,0);
-			try {
-				Thread.sleep(300);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+	public static int runOnce(double[] weights, boolean visualOn){
+		if(visualOn){
+			State s = new State();
+			TFrame t = new TFrame(s);
+			PlayerSkeleton p = new PlayerSkeleton();
+			int move =0;
+			while(!s.hasLost()) {
+				move++;
+				s.makeMove(p.pickMove(s,s.legalMoves(),weights));
+				
+				s.draw();
+				s.drawNext(0,0);
+				
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
+			int score = s.getRowsCleared();
+			//System.out.println("moves made = "+move);
+			//System.out.println("You have completed "+score+" rows.");
+			
+			t.dispose();
+			return score;
+		}else{
+			State s = new State();
+			PlayerSkeleton p = new PlayerSkeleton();
+			int move =0;
+			while(!s.hasLost()) {
+				move++;
+				s.makeMove(p.pickMove(s,s.legalMoves(),weights));
+			}
+			int score = s.getRowsCleared();
+			//System.out.println("moves made = "+move);
+			//System.out.println("You have completed "+score+" rows.");
+			return score;
 		}
-		System.out.println("You have completed "+s.getRowsCleared()+" rows.");
+	}
+	public static double[] mutate(double[] arr){
+		double[] mutated = new double[arr.length];
+		System.arraycopy(arr, 0, mutated, 0, arr.length);
+		Random r = new Random();
+		int 	randIdx 	= r.nextInt(arr.length-0) + 0;
+		double 	randValue 	= -(r.nextInt(101-0) + 0)/100.0;
+		mutated[randIdx] = randValue;
+		return mutated;
+		
+	}
+	public static void main(String[] args) {
+		Scanner sc = new Scanner(System.in);
+		int testRunSize = sc.nextInt();
+		
+		
+		//so far best weights for evaluate1
+		//double[] bestWeights= {-0.69, -0.12, -0.97, -0.28, -0.67};
+		
+		//so far best weights for evaluate2
+		double[] bestWeights= {-0.84, -0.15, -0.23, -0.33, -0.06};
+
+		//Run once
+		//System.out.println("score = "+runOnce(bestWeights,true));
+		
+		//test
+		int bestScore=711;//0;
+		while(testRunSize-->0){
+			double[] weights = mutate(bestWeights);
+			System.out.println("try = "+printArrDouble(weights));
+			int meanScore = 0;
+			int runTimes = 10;
+			for(int i=0; i<runTimes; i++){
+				meanScore += runOnce(weights,false)*1.0/runTimes;
+			}
+			System.out.println("mean score = "+meanScore);
+			if(meanScore>bestScore) {
+				bestScore = meanScore;
+				bestWeights = weights;
+				System.out.println("updated weight = "+printArrDouble(bestWeights));
+			}
+		
+		}
+		System.out.println("best score = "+bestScore);
+		System.out.println("best weight = "+printArrDouble(bestWeights));
 	}
 	
 }

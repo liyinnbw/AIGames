@@ -117,7 +117,32 @@ public class PlayerSkeleton {
 		return count;
 	}
 
-
+	public double evaluate0(State s, State os, double[] weights){
+		int[] heights 		= getColumnHeights(s);
+		int[] heightDiff 	= getHeightDiff(s);
+		int maxHeight 		= getMaxHeight(s);
+		int holeIncreased 	= getHoleCount(s.getField());
+		
+		int numFeatures = 22;
+		int[] features = new int[numFeatures];
+		System.arraycopy(heights, 0, features, 0, heights.length);
+		System.arraycopy(heightDiff, 0, features, heights.length, heightDiff.length);
+		features[features.length-3]=maxHeight;
+		features[features.length-2]=holeIncreased;
+		features[features.length-1]=1;
+		
+		double V = 0;
+		for(int i=0; i<heights.length; i++){
+			V+=features[i]*weights[0];
+		}
+		for(int i=heights.length; i<heights.length+heightDiff.length; i++){
+			V+=features[i]*weights[1];
+		}
+		V+=features[features.length-3]*weights[weights.length-3];
+		V+=features[features.length-2]*weights[weights.length-2];
+		V+=features[features.length-1]*weights[weights.length-1];
+		return V;
+	}
 	public double evaluate1(State s, State os, double[] weights){
 		int[] heights 		= getColumnHeights(s);
 		int[] heightDiff 	= getHeightDiff(s);
@@ -162,6 +187,24 @@ public class PlayerSkeleton {
 		}
 		return V;
 	}
+	public double evaluate3(State s, State os, double[] weights){
+
+		int numFeatures 	= 5;
+		double[] features 	= new double[numFeatures];
+		features[0]			= getHeightMean(s)-getHeightMean(os);
+		features[1]			= getHeightStd(s);
+		features[2]			= getMaxHeight(s)-getMaxHeight(os);
+		features[3]			= getHoleCount(s.getField())-getHoleCount(os.getField());
+		features[4]			= 1;	//bias term
+		//System.out.println(printArrDouble(features));
+		//double[] weights 	= {-0.0, -0.8, -0.1, -0.1, -0.0};
+		
+		double V = 0;
+		for(int i=0; i<features.length; i++){
+			V+=features[i]*weights[i];
+		}
+		return V;
+	}
 	
 	public int pickMove(State s, int[][] legalMoves, double[] weights) {
 
@@ -185,7 +228,7 @@ public class PlayerSkeleton {
 			}
 			
 			//evaluate move
-			double V = evaluate1(ss, s, weights);
+			double V = evaluate0(ss, s, weights);
 			int R = ss.getRowsCleared();
 			double U = R+V;
 			
@@ -260,7 +303,14 @@ public class PlayerSkeleton {
 		//double[] bestWeights= {-0.81, -0.35, -0.97, -0.04, -0.13};
 		
 		//so far best weights for evaluate1
-		double[] bestWeights= {-0.79, -0.15, -0.14, -0.1, -0.75};
+		//double[] bestWeights= {-0.79, -0.15, -0.14, -0.1, -0.75};
+		
+		//so far best weights for evaluate3
+		//double[] bestWeights= {-0.99, -0.61, 0.0, -0.1, -0.23};
+		
+		//so far best weights for evaluate0
+		double[] bestWeights= {-0.8, -0.15, -0.14, -0.1, -0.39};
+				
 		
 		int best=0;
 		while(true){
@@ -270,7 +320,8 @@ public class PlayerSkeleton {
 			if(result>best) best =result;
 			System.out.println("best = "+best);
 		}
-	/*	
+		
+		/*
 		//test
 	 	Scanner sc = new Scanner(System.in);
 		int testRunSize = sc.nextInt();

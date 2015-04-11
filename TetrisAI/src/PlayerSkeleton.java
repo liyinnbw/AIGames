@@ -257,15 +257,21 @@ public class PlayerSkeleton {
 		
 		
 		//so far best weights for evaluate2
-		//double[] bestWeights= {-0.69, -0.12, -0.97, -0.28, -0.67};
+		//double[] bestWeights= {-0.81, -0.35, -0.97, -0.04, -0.13};
 		
 		//so far best weights for evaluate1
 		double[] bestWeights= {-0.79, -0.15, -0.14, -0.1, -0.75};
-
-		//Run once
-		System.out.println("score = "+runOnce(bestWeights,true));
 		
-	/*	//test
+		int best=0;
+		while(true){
+			//Run once
+			int result = runOnce(bestWeights,true);
+			System.out.print("score = "+result);
+			if(result>best) best =result;
+			System.out.println("best = "+best);
+		}
+	/*	
+		//test
 	 	Scanner sc = new Scanner(System.in);
 		int testRunSize = sc.nextInt();
 		int runTimes = 50;
@@ -273,7 +279,7 @@ public class PlayerSkeleton {
 		for(int i=0; i<runTimes; i++){
 			bestScore += runOnce(bestWeights,false)*1.0/runTimes;
 		}
-		
+		System.out.println("mean score = "+bestScore);
 		while(testRunSize-->0){
 			double[] weights = mutate(bestWeights);
 			System.out.println("try = "+printArrDouble(weights));

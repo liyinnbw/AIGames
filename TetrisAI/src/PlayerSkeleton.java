@@ -236,7 +236,7 @@ public class PlayerSkeleton {
 			}
 			
 			//evaluate move
-			double V = evaluate0(ss, s, weights);
+			double V = evaluate1(ss, s, weights);
 			int R = ss.getRowsCleared();
 			double U = R+V;
 			
@@ -375,21 +375,21 @@ public class PlayerSkeleton {
 			double[] current = child.next();
 			// run 5 time per weight, to get average
 			int sum = 0;
-			int counter = 5;
-			while(counter>0){
+			int counter = 10;
+			for(int i=0; i<counter; i++){
 				int result = runOnce(current,false);
 				sum += result;
-				counter--;
 			}
 			
-			int result = sum/5;
-			System.out.print("score = "+result + "  ");
-			System.out.println("best = "+result_best + "  ");
+			int result = sum/counter;
+			
 			
 		    if (result>result_best) {
 		    	result_best = result;
 		    	result_particle = current;
 		    }
+		    System.out.print("score = "+result + "  ");
+			System.out.println("best = "+result_best + "  weight = "+printArrDouble(result_particle));
 		}
 		
 		// let sub-swarm continue sub-region search
@@ -418,7 +418,7 @@ public class PlayerSkeleton {
 		
 		/* Original method before Wen Xia try lotus swarm
 		
-		double[] bestWeights= {-0.8, -0.15, -0.14, -0.1, -0.39};
+		double[] bestWeights= {-0.3742081579506406, -0.054361049924312226, -0.34281777852976386, -0.19754856202244633, -0.687821687911777};
 		
 		int best=0;
 		while(true){
@@ -432,16 +432,17 @@ public class PlayerSkeleton {
 		
 		// Test for lotus swarm
 		int best=0;
-		double[] roof = {0,0,0,0,0};
+		double[] roof = {0,0,0,0,1};
 		double[] floor = {-1,-1,-1,-1,-1};
+		long startTime = System.currentTimeMillis();
 		lotusSwarm(roof,0,roof,floor);
+		
 		double[] bestWeights= result_particle;
 		int threshold_test = 10;
-		
+		long estimatedTime = System.currentTimeMillis() - startTime;
+		System.out.println("time = "+estimatedTime/1000.0+" s");
 		System.out.println("best particle: ");
-		for (double speed : result_particle) {
-            System.out.println(speed);
-        }	
+        System.out.println(printArrDouble(result_particle));
 		
 
 		for(int i = 0;i<threshold_test;i++){

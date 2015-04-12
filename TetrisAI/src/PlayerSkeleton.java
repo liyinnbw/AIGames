@@ -416,7 +416,7 @@ public class PlayerSkeleton {
 		
 		//so far best weights for evaluate0
 		
-		/* Original before Wen Xia try lotus swarm
+		/* Original method before Wen Xia try lotus swarm
 		
 		double[] bestWeights= {-0.8, -0.15, -0.14, -0.1, -0.39};
 		

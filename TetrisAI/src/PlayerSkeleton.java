@@ -1,8 +1,16 @@
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Random;
 import java.util.Scanner;
 
 
 public class PlayerSkeleton {
+	
+	// Global result for lotus swarm
+	static double[] result_particle = null;
+	static int result_best = 0;
+	
 	public String printArrInt(int[] arr){
 		String s="{";
 		for(int i=0; i<arr.length; i++){
@@ -295,8 +303,106 @@ public class PlayerSkeleton {
 		return mutated;
 		
 	}
-	public static void main(String[] args) {
+	
+	// 
+	public static double[] lotusSwarm(double[] arr,int level,double[] roof,double[] floor){
+		ArrayList <double[]> particle_list = new ArrayList<double[]>();
+		int num_particles = 8;
+		int depth_limit = 3;
+		double small_radius = (roof[0] - floor[0])/100;
 		
+		if(level >= depth_limit){
+			// if achieved maximum depth, stop
+		    return null;
+		}
+		
+		// generate child particles to continue search
+		if(result_particle == null){
+			// if original particle, initialize
+			System.out.println("Initialize");
+			for(int k=0;k<num_particles;k++){
+				Random random = new Random();
+				double[] new_particle = {random.nextDouble()*(roof[0]-floor[0])+floor[0],
+						random.nextDouble()*(roof[1]-floor[1])+floor[1],
+						random.nextDouble()*(roof[2]-floor[2])+floor[2],
+						random.nextDouble()*(roof[3]-floor[3])+floor[3],
+						random.nextDouble()*(roof[4]-floor[4])+floor[4]};
+				particle_list.add(new_particle);
+			}
+		}else if(Arrays.equals(arr, result_particle)){
+			// if self is best particle, randomly search near regions
+			System.out.println("Search around best");
+			for(int k=0;k<num_particles;k++){
+				Random random = new Random();
+				Random sign = new Random();
+				if((sign.nextInt() & 1) == 0) small_radius = -small_radius;
+				double[] new_particle = {random.nextDouble()*(small_radius)+arr[0],
+						random.nextDouble()*(small_radius)+arr[1],
+						random.nextDouble()*(small_radius)+arr[2],
+						random.nextDouble()*(small_radius)+arr[3],
+						random.nextDouble()*(small_radius)+arr[4]};
+				particle_list.add(new_particle);
+			}
+		}else{
+			// if self is not the best particle, in high possibility we random search towards the the best particle
+			// and in low possibility give random search
+			for(int k=0;k<num_particles;k++){
+				Random possibility = new Random();
+				if(possibility.nextDouble()>0.3){
+					System.out.println("Search towards best");
+					Random random = new Random();
+					double[] new_particle = {random.nextDouble()*(result_particle[0]-arr[0])+arr[0],
+						random.nextDouble()*(result_particle[1]-arr[1])+arr[1],
+						random.nextDouble()*(result_particle[2]-arr[2])+arr[2],
+						random.nextDouble()*(result_particle[3]-arr[3])+arr[3],
+						random.nextDouble()*(result_particle[4]-arr[4])+arr[4]};
+					particle_list.add(new_particle);
+				}else{
+					System.out.println("Random behavior");
+					Random random = new Random();
+					double[] new_particle = {random.nextDouble()*(roof[0]-floor[0])+floor[0],
+							random.nextDouble()*(roof[1]-floor[1])+floor[1],
+							random.nextDouble()*(roof[2]-floor[2])+floor[2],
+							random.nextDouble()*(roof[3]-floor[3])+floor[3],
+							random.nextDouble()*(roof[4]-floor[4])+floor[4]};
+					particle_list.add(new_particle);
+				}
+			}
+		}
+		
+		// Compare all childen's performance
+		for(Iterator<double[]> child = particle_list.iterator(); child.hasNext(); ) {
+			double[] current = child.next();
+			// run 5 time per weight, to get average
+			int sum = 0;
+			int counter = 5;
+			while(counter>0){
+				int result = runOnce(current,false);
+				sum += result;
+				counter--;
+			}
+			
+			int result = sum/5;
+			System.out.print("score = "+result + "  ");
+			System.out.println("best = "+result_best + "  ");
+			
+		    if (result>result_best) {
+		    	result_best = result;
+		    	result_particle = current;
+		    }
+		}
+		
+		// let sub-swarm continue sub-region search
+		for(Iterator<double[]> child = particle_list.iterator(); child.hasNext(); ) {
+			double[] current = child.next();
+			lotusSwarm(current,(level+1),roof,floor);
+		}
+		
+		
+		return null;
+	}
+	
+	public static void main(String[] args) {	
 		
 		
 		//so far best weights for evaluate2
@@ -309,8 +415,10 @@ public class PlayerSkeleton {
 		//double[] bestWeights= {-0.99, -0.61, 0.0, -0.1, -0.23};
 		
 		//so far best weights for evaluate0
+		
+		/* Original before Wen Xia try lotus swarm
+		
 		double[] bestWeights= {-0.8, -0.15, -0.14, -0.1, -0.39};
-				
 		
 		int best=0;
 		while(true){
@@ -320,6 +428,28 @@ public class PlayerSkeleton {
 			if(result>best) best =result;
 			System.out.println("best = "+best);
 		}
+		*/
+		
+		// Test for lotus swarm
+		int best=0;
+		double[] roof = {0,0,0,0,0};
+		double[] floor = {-1,-1,-1,-1,-1};
+		lotusSwarm(roof,0,roof,floor);
+		double[] bestWeights= result_particle;
+		int threshold_test = 10;
+		
+		System.out.println("best particle: ");
+		for (double speed : result_particle) {
+            System.out.println(speed);
+        }	
+		
+
+		for(int i = 0;i<threshold_test;i++){
+			int result = runOnce(bestWeights,false);
+			System.out.print("result score = "+result + "  ");
+			if(result>best) best =result;
+			System.out.println("result best = "+best);
+		}		
 		
 		/*
 		//test

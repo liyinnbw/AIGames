@@ -81,14 +81,16 @@ public class GameState {
 		setCurrSide(1-currSide);
 		return true;
 	}
-	
+	public int getBit(int[] s, int r, int c){
+		return s[r] & colMask[c];
+	}
 	//reduce the search space by limiting new added piece to be 
-	//at most 2 squares away from the nearest other piece
+	//at most 1 squares away from the nearest other piece
 	public boolean isTooFar(int[] occupied, int r, int c){
 		int newPieceExpandedMap[] = new int[ROWS];
 		for(int i=0; i<ROWS; i++){
 			for(int j=0; j<COLS; j++){
-				if(Math.abs(i-r)<3 && Math.abs(j-c)<3)
+				if(Math.abs(i-r)<2 && Math.abs(j-c)<2)
 					newPieceExpandedMap[i] |= colMask[j];
 			}
 		}
@@ -128,36 +130,39 @@ public class GameState {
 		}
 		return nexts;
 	}
+	public int heuristicFunction(){
+		return 0;
+	}
 	public int evaluate(){
 		int total = 0;
-		if(checkWin(MAX_PLAYER)) return MAX_STATE_VALUE;
-		if(checkWin(MIN_PLAYER)) return MIN_STATE_VALUE;
+		if(checkConnect(MAX_PLAYER,WIN_CONNECT)) return MAX_STATE_VALUE;
+		if(checkConnect(MIN_PLAYER,WIN_CONNECT)) return MIN_STATE_VALUE;
 		return total;
 	}
 	public int isGameOver(){
-		if(checkWin(MAX_PLAYER)) return MAX_PLAYER;	//0
-		if(checkWin(MIN_PLAYER)) return MIN_PLAYER;	//1
-		if(checkFull()) return TIE;					//2
+		if(checkConnect(MAX_PLAYER,WIN_CONNECT)) return MAX_PLAYER;	//0
+		if(checkConnect(MIN_PLAYER,WIN_CONNECT)) return MIN_PLAYER;	//1
+		if(checkFull()) return TIE;									//2
 		
 		return -1;
 	}
-	public boolean checkWin(int side){
+	public boolean checkConnect(int side, int connect){
 		int s[] = state[side];
 
 		//check vertical
-		if(checkVertical(s)) return true;
+		if(checkVertical(s,connect)) return true;
 		
 		//check horizontal
 		int tpState[] = transpose(s);
-		if(checkVertical(tpState)) return true;
+		if(checkVertical(tpState,connect)) return true;
 		
 		//check diagonal \
 		int sflState[] = diagonalShiftL(s);
-		if(checkVertical(sflState)) return true;
+		if(checkVertical(sflState,connect)) return true;
 		
 		//check diagonal /
 		int sfrState[] = diagonalShiftR(s);
-		if(checkVertical(sfrState)) return true;
+		if(checkVertical(sfrState,connect)) return true;
 		
 		return false;
 	}
@@ -175,10 +180,10 @@ public class GameState {
 		
 		return true;
 	}
-	public boolean checkVertical(int state[]){
-		for(int i=0; i<=ROWS-WIN_CONNECT; i++){
+	public boolean checkVertical(int state[], int connect){
+		for(int i=0; i<=ROWS-connect; i++){
 			int result=state[i];
-			for(int j=1; j<WIN_CONNECT; j++){
+			for(int j=1; j<connect; j++){
 				result &= state[i+j];
 			}
 			if (result!=0) return true;
@@ -216,13 +221,13 @@ public class GameState {
 		}
 		return tpState;
 	}
-
-	public void aiMove(){
-		GameTree tree = new GameTree(this, 4);
-		GameState nextBest = tree.nextMove();
-		setGameState(nextBest.getGameState());
-		setCurrSide(1-currSide);
-	}
+	//moved to MainUI.java to enable global hashing
+	//public void aiMove(){
+	//	GameTree tree = new GameTree(this, 4);
+	//	GameState nextBest = tree.nextMove();
+	//	setGameState(nextBest.getGameState());
+	//	setCurrSide(1-currSide);
+	//}
 	public String intToRow(int r){
 		String s = "%"+COLS+"s";
 		return String.format(s, Integer.toBinaryString(r)).replace(' ', '0');

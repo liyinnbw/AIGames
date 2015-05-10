@@ -17,7 +17,9 @@ public class MainUI extends JPanel{
    public int GRID_COLS;	//vertices, not squares
    public int X_OFFSET;
    public int Y_OFFSET;
+   public int SEARCH_DEPTH;
    public GameState gameState;
+   public GameTree agent;
    
    public MainUI(){
 	   X_OFFSET=8;
@@ -25,12 +27,14 @@ public class MainUI extends JPanel{
 	   XO=50;
 	   YO=60;
 	   UNIT = 60;
-	   GRID_ROWS = 12;	//vertices, not squares
-	   GRID_COLS = 12;	//vertices, not squares
+	   GRID_ROWS = 10;	//vertices, not squares
+	   GRID_COLS = 10;	//vertices, not squares
+	   SEARCH_DEPTH = 4;
 	   newGame();
    }
    private void newGame(){
 	   gameState = new GameState(GRID_ROWS,GRID_COLS,GameState.MAX_PLAYER);
+	   agent = new GameTree(gameState, SEARCH_DEPTH);
    }
    private Point posOnGrid(Point p){
 	   Point pos = new Point((int)((p.getX()-XO+UNIT/2.0)/UNIT),(int)((p.getY()-YO+UNIT/2.0)/UNIT));
@@ -39,6 +43,11 @@ public class MainUI extends JPanel{
    private Point posAbsolute(Point p){
 	   Point pos = new Point((int)(p.getX()*UNIT+XO),(int)(p.getY()*UNIT+YO));
 	   return pos;
+   }
+   public void agentMove(){
+	   GameState nextBest = agent.nextMove();
+	   gameState.setGameState(nextBest.getGameState());
+	   gameState.setCurrSide(1-gameState.getCurrSide());
    }
    @Override
    public void paint (Graphics g) {
@@ -114,7 +123,7 @@ public class MainUI extends JPanel{
 			        		gameboard.repaint();
 			        	}
 			        }else{
-			        	gameboard.gameState.aiMove();
+			        	gameboard.agentMove();
 			        	over = gameboard.gameState.isGameOver();
 				        if(over!=-1){
 				        	String message;

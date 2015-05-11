@@ -7,8 +7,8 @@ import org.junit.Test;
 
 public class TestGameState {
 	public GameState g;
-	public static int COLS=12;
-	public static int ROWS=12;
+	public static int COLS=15;
+	public static int ROWS=15;
 	@Before
 	public void init() {
 		g = new GameState(ROWS,COLS,GameState.MAX_PLAYER);
@@ -92,6 +92,103 @@ public class TestGameState {
 		System.out.println(g.isTooFar(occupied, 5, 5));
 		
 		System.out.println(g.isTooFar(occupied, ROWS-1, COLS-1));
+	}
+	@Test
+	public void testEvaluateValues(){
+		int values1[] = {GameState.LIVE_4,GameState.LIVE_4, GameState.LIVE_4, GameState.LIVE_4};
+		int values2[] = {GameState.DEAD_4,GameState.DEAD_4, GameState.DEAD_4, GameState.DEAD_4};
+		int values3[] = {GameState.LIVE_3,GameState.LIVE_3, GameState.LIVE_3, GameState.LIVE_3};
+		int values4[] = {GameState.DEAD_3,GameState.DEAD_3, GameState.DEAD_3, GameState.DEAD_3};
+		int values5[] = {GameState.LIVE_2,GameState.LIVE_2, GameState.LIVE_2, GameState.LIVE_2};
+		int values6[] = {GameState.DEAD_2,GameState.DEAD_2, GameState.DEAD_2, GameState.DEAD_2};
+		int values7[] = {GameState.DEAD_3,GameState.LIVE_3, GameState.DEAD_2, GameState.DEAD_2};
+		int values8[] = {GameState.DEAD_3,GameState.LIVE_3, GameState.DEAD_4, GameState.DEAD_2};
+		assertEquals(g.evaluateValues(values1),GameState.LIVE_4);
+		assertEquals(g.evaluateValues(values2),GameState.DOUBLE_DEAD_4);
+		assertEquals(g.evaluateValues(values3),GameState.DOUBLE_LIVE_3);
+		assertEquals(g.evaluateValues(values4),GameState.DOUBLE_DEAD_3);
+		assertEquals(g.evaluateValues(values5),GameState.DOUBLE_LIVE_2);
+		assertEquals(g.evaluateValues(values6),GameState.DEAD_2);
+		assertEquals(g.evaluateValues(values7),GameState.DEAD_3_LIVE_3);
+		assertEquals(g.evaluateValues(values8),GameState.DEAD_4_LIVE_3);
+	}
+	@Test
+	public void testEvaluatePattern2(){
+		String pattern = "201111022011100";
+		assertEquals(g.evaluatePattern2(pattern, 2),GameState.LIVE_4);
+		assertEquals(g.evaluatePattern2(pattern, 3),GameState.LIVE_4);
+		assertEquals(g.evaluatePattern2(pattern, 4),GameState.LIVE_4);
+		assertEquals(g.evaluatePattern2(pattern, 5),GameState.LIVE_4);
+		assertNotEquals(g.evaluatePattern2(pattern, 10),GameState.LIVE_4);
+		assertNotEquals(g.evaluatePattern2(pattern, 11),GameState.LIVE_4);
+		assertNotEquals(g.evaluatePattern2(pattern, 12),GameState.LIVE_4);
+		/*
+		pattern = "111101000000000";
+		assertEquals(g.evaluatePattern2(pattern, 2),GameState.DEAD_4);
+		pattern = "0211110100000000";
+		assertEquals(g.evaluatePattern2(pattern, 3),GameState.DEAD_4);
+		pattern = "000000002001111";
+		assertEquals(g.evaluatePattern2(pattern, 13),GameState.DEAD_4);
+		pattern = "000000010111120";
+		assertEquals(g.evaluatePattern2(pattern, 12),GameState.DEAD_4);
+		*/
+		
+	}
+	@Test
+	public void testCombineBitStrings(){
+		String a = "000110100";
+		String b = "001001000";
+		String c = "002112100";
+		String d = "001221200";
+		assertEquals(g.combineBitStrings(a,b),c);
+		assertEquals(g.combineBitStrings(b,a),d);
+	}
+	@Test
+	public void testEvaluatePos2(){
+		String s[][] = {
+			   {"000000000000000",
+				"001100000000000",
+				"000000000000000",
+				"001000000000000",
+				"000100000000000",
+				"000010000000000",
+				"000001000000000",
+				"000000000000000",
+				"000000010000000",
+				"000000001000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000"},
+				
+			   {"000000000000000",
+				"010010000000000",
+				"000000000000000",
+				"010100000000000",
+				"001010000000000",
+				"000100000000000",
+				"000000100000000",
+				"000001010000000",
+				"000000101000000",
+				"000000010100000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000"}
+				
+		};
+		int state[][]=new int[2][ROWS];
+		for(int i=0; i<2; i++){
+			for(int j=0; j<ROWS; j++){
+				state[i][j]=Integer.parseInt(s[i][j],2);
+			}
+		}
+		g.setGameState(state);
+		System.out.println(g);
+		g.evaluatePos2(1, 2, GameState.MAX_PLAYER);
+		System.out.println(g.evaluate());
 	}
 
 }

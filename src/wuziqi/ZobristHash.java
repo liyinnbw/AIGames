@@ -15,6 +15,7 @@ public class ZobristHash {
 				hashtable[i][j] = rand.nextInt();
 			}
 		}
+		System.out.println("Zobrist HashTable initialized once");
 	}
 	
 	//currently this hashfunction is hardcoded

@@ -27,8 +27,8 @@ public class MainUI extends JPanel{
 	   XO=50;
 	   YO=60;
 	   UNIT = 60;
-	   GRID_ROWS = 10;	//vertices, not squares
-	   GRID_COLS = 10;	//vertices, not squares
+	   GRID_ROWS = 15;	//vertices, not squares
+	   GRID_COLS = 15;	//vertices, not squares
 	   SEARCH_DEPTH = 4;
 	   newGame();
    }

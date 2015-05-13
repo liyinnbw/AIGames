@@ -2,6 +2,7 @@ package test;
 
 import static org.junit.Assert.*;
 import wuziqi.GameState;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -132,7 +133,8 @@ public class TestGameState {
 		pattern = "000000010111120";
 		assertEquals(g.evaluatePattern2(pattern, 12),GameState.DEAD_4);
 		*/
-		
+		pattern = "001100000000000";
+		assertEquals(g.evaluatePattern2(pattern, 2),GameState.DEAD_2);
 	}
 	@Test
 	public void testCombineBitStrings(){
@@ -186,9 +188,79 @@ public class TestGameState {
 			}
 		}
 		g.setGameState(state);
-		System.out.println(g);
-		g.evaluatePos2(1, 2, GameState.MAX_PLAYER);
-		System.out.println(g.evaluate());
+		System.out.println(g.evaluatePos2(1, 2, GameState.MAX_PLAYER));
+	
 	}
-
+	@Test
+	public void testEvaluateAll(){
+		String s[][] = {
+				   {"000000000000000",
+					"001100000000000",
+					"000000000000000",
+					"001000000000000",
+					"000100000000000",
+					"000010000000000",
+					"000001000000000",
+					"000000000000000",
+					"000000010000000",
+					"000000001000000",
+					"000000000000000",
+					"000000000000000",
+					"000000000000000",
+					"000000000000000",
+					"000000000000000"},
+					
+				   {"000000000000000",
+					"010010000000000",
+					"000000000000000",
+					"010100000000000",
+					"001010000000000",
+					"000100000000000",
+					"000000100000000",
+					"000001010000000",
+					"000000101000000",
+					"000000010100000",
+					"000000000000000",
+					"000000000000000",
+					"000000000000000",
+					"000000000000000",
+					"000000000000000"}
+					
+			};
+			int state[][]=new int[2][ROWS];
+			for(int i=0; i<2; i++){
+				for(int j=0; j<ROWS; j++){
+					state[i][j]=Integer.parseInt(s[i][j],2);
+				}
+			}
+			g.setGameState(state);
+			System.out.println(g.evaluateAll(GameState.MAX_PLAYER));
+	}
+	@Test
+	public void compareEvalute3and2(){
+		String sa = "001111000000100";
+		String sb = "100000011000000";
+		String scombined = g.combineBitStrings(sa,sb);
+		int a = Integer.parseInt(sa,2);
+		int b = Integer.parseInt(sb,2);
+		int idx = 2;
+		
+		long start = System.currentTimeMillis();
+		for(int i=0; i<10000000; i++){
+			assertEquals(g.evaluatePattern3(a,b,14-idx),GameState.LIVE_4);
+		}
+		long end = System.currentTimeMillis();
+		System.out.println("time = "+(end-start)/1000.0+" s");
+		
+		start = System.currentTimeMillis();
+		for(int i=0; i<10000000; i++){
+			assertEquals(g.evaluatePattern2(scombined,idx),GameState.LIVE_4);
+		}
+		end = System.currentTimeMillis();
+		System.out.println("time = "+(end-start)/1000.0+" s");
+	}
+	@Test
+	public void testEvaluate3(){
+		
+	}
 }

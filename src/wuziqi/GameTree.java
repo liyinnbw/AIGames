@@ -65,7 +65,7 @@ public class GameTree {
 					state[side][row]=Integer.parseInt(line,2);
 					row++;
 					if(row>=currState.getRows() && side == currState.MIN_PLAYER){
-						GameState s = new GameState(currState.getRows(), currState.getCols(), 0 , state);
+						GameState s = new GameState(currState.getRows(), currState.getCols(), 0 , state);//, currState.getValue());
 						if(isCurrentState){
 							System.out.println("is current state");
 							hashValue = hasher.hash(s);

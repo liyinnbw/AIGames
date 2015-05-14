@@ -172,8 +172,8 @@ public class GameState {
 		
 		if(wBit!=0 || bBit!=0) return false;
 		state[currSide][y] |= bitMap;
-		setLatestMove(y*COLS+x);
-		updateValue(y,x);
+		//setLatestMove(y*COLS+x);
+		//updateValue(y,x);
 		setCurrSide(1-currSide);
 		return true;
 	}
@@ -227,7 +227,7 @@ public class GameState {
 				if(i==0 && j==0) continue;
 				int newRow = row | colMask[latestC+j];
 				if(newRow != row){
-					GameState s = new GameState(ROWS, COLS, currSide, state);
+					GameState s = new GameState(ROWS, COLS, currSide, state);//, value);
 					s.addPiece(latestC+j,latestR+i); //addPiece uses grid coordinates, so j,i
 					nexts.add(s);
 				}
@@ -260,6 +260,8 @@ public class GameState {
 		
 		for(int i=0; i<ROWS; i++){
 			for(int j=0; j<COLS; j++){
+				
+				
 				//only need to calculate for non-zero pos
 				if((state[MAX_PLAYER][i] & colMask[j])!=0){
 					int maxplayerValue=evaluatePos(i,j,MAX_PLAYER);
@@ -269,6 +271,10 @@ public class GameState {
 					int minplayerValue=0-evaluatePos(i,j,MIN_PLAYER);
 					minplayerTotal+=(minplayerValue-1);
 				}
+				
+				//maxplayerTotal += value[MAX_PLAYER][i][j][0];
+				//minplayerTotal -= value[MIN_PLAYER][i][j][0];
+				
 			}
 		}
 		
@@ -279,11 +285,88 @@ public class GameState {
 	//TODO: except for the pos newly added, the rest only need to update 1 direction and reevaluate pattern.
 	public int updateValue(int r, int c){
 		
-		//update the newly added pos
+		//evaluate the newly added pos
+		int newPosValue = evaluatePos(r,c,currSide);
 		
-		//update horizontal
+		//update horizontally affected pos
 		for(int i=0; i<COLS; i++){
-			
+			if(i!=c){
+				if((state[MAX_PLAYER][r] & colMask[i])!=0){
+					evaluatePos(r,i, MAX_PLAYER);
+				}
+				else if((state[MIN_PLAYER][r] & colMask[i])!=0){
+					evaluatePos(r,i, MIN_PLAYER);
+				}
+				
+			}
+		}
+		
+		//update vertically affected pos
+		for(int i=0; i<ROWS; i++){
+			if(i!=r){
+				if((state[MAX_PLAYER][i] & colMask[c])!=0){
+					evaluatePos(i,c, MAX_PLAYER);
+				}
+				else if((state[MIN_PLAYER][i] & colMask[c])!=0){
+					evaluatePos(i,c, MIN_PLAYER);
+				}
+			}	
+		}
+		
+		//update diagonal \
+		for(int i=1; i<ROWS; i++){
+			if(r-i<0 || c-i<0){
+				break;
+			}
+			int row = r-i;
+			int col = c-i;
+			if((state[MAX_PLAYER][row] & colMask[col])!=0){
+				evaluatePos(row,col, MAX_PLAYER);
+			}
+			else if((state[MIN_PLAYER][row] & colMask[col])!=0){
+				evaluatePos(row,col, MIN_PLAYER);
+			}
+		}
+		for(int i=1; i<ROWS; i++){
+			if(r+i>=ROWS || c+i>=COLS){
+				break;
+			}
+			int row = r+i;
+			int col = c+i;
+			if((state[MAX_PLAYER][row] & colMask[col])!=0){
+				evaluatePos(row,col, MAX_PLAYER);
+			}
+			else if((state[MIN_PLAYER][row] & colMask[col])!=0){
+				evaluatePos(row,col, MIN_PLAYER);
+			}
+		}
+		
+		//update diagonal /
+		for(int i=1; i<ROWS; i++){
+			if(r-i<0 || c+i>=COLS){
+				break;
+			}
+			int row = r-i;
+			int col = c+i;
+			if((state[MAX_PLAYER][row] & colMask[col])!=0){
+				evaluatePos(row,col, MAX_PLAYER);
+			}
+			else if((state[MIN_PLAYER][row] & colMask[col])!=0){
+				evaluatePos(row,col, MIN_PLAYER);
+			}
+		}
+		for(int i=1; i<ROWS; i++){
+			if(r+i>=ROWS || c-i<0){
+				break;
+			}
+			int row = r+i;
+			int col = c-i;
+			if((state[MAX_PLAYER][row] & colMask[col])!=0){
+				evaluatePos(row,col, MAX_PLAYER);
+			}
+			else if((state[MIN_PLAYER][row] & colMask[col])!=0){
+				evaluatePos(row,col, MIN_PLAYER);
+			}
 		}
 		
 		return 0;
@@ -383,13 +466,13 @@ public class GameState {
 		}
 		values[3] = evaluatePattern(thisSideBits, otherSideBits, ROWS-1-idx);
 		int overall = evaluateValues(values);
-/*		
-		value[side][r][c][0]= overall;
-		value[side][r][c][1]=values[0];
-		value[side][r][c][2]=values[1];
-		value[side][r][c][3]=values[2];
-		value[side][r][c][4]=values[3];
-*/		
+		
+//		value[side][r][c][0]= overall+1;
+//		value[side][r][c][1]=values[0];
+//		value[side][r][c][2]=values[1];
+//		value[side][r][c][3]=values[2];
+//		value[side][r][c][4]=values[3];
+		
 		return overall;
 	}
 	public int evaluatePattern(int thisSidePattern, int otherSidePattern, int idx ){

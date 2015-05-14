@@ -38,14 +38,17 @@ public class GameState {
 	public static final String REGEX_DEAD_3_3 = "11001";
 	public static final String REGEX_DEAD_3_4 = "11100";
 	public static final String REGEX_DEAD_3_5 = "10101";
-	public static final String REGEX_DEAD_3_6 = "010110";
-	public static final String REGEX_DEAD_3_7 = "011010";
+	public static final String REGEX_DEAD_3_6 = "01110";
+	public static final String REGEX_DEAD_3_7 = "010110";
+	public static final String REGEX_DEAD_3_8 = "011010";
 	public static final String REGEX_LIVE_2 = "00011000";
 	public static final String REGEX_DEAD_2 = "00011|11000|0010100|010010";
 	public static final String REGEX_DEAD_2_1 = "00011";
-	public static final String REGEX_DEAD_2_2 = "11000";
-	public static final String REGEX_DEAD_2_3 = "010010";
-	public static final String REGEX_DEAD_2_4 = "0010100";
+	public static final String REGEX_DEAD_2_2 = "00110";
+	public static final String REGEX_DEAD_2_3 = "01100";
+	public static final String REGEX_DEAD_2_4 = "11000";
+	public static final String REGEX_DEAD_2_5 = "010010";
+	public static final String REGEX_DEAD_2_6 = "0010100";
 	public static final Pattern PATTERN_LIVE_4 = Pattern.compile(REGEX_LIVE_4);
 	public static final Pattern PATTERN_DEAD_4 = Pattern.compile(REGEX_DEAD_4);
 	public static final Pattern PATTERN_LIVE_3 = Pattern.compile(REGEX_LIVE_3);
@@ -66,11 +69,14 @@ public class GameState {
 	public static final int	BIT_DEAD_3_5 = Integer.parseInt(REGEX_DEAD_3_5,2);
 	public static final int	BIT_DEAD_3_6 = Integer.parseInt(REGEX_DEAD_3_6,2);
 	public static final int	BIT_DEAD_3_7 = Integer.parseInt(REGEX_DEAD_3_7,2);
+	public static final int	BIT_DEAD_3_8 = Integer.parseInt(REGEX_DEAD_3_8,2);
 	public static final int	BIT_LIVE_2   = Integer.parseInt(REGEX_LIVE_2,2);
 	public static final int	BIT_DEAD_2_1 = Integer.parseInt(REGEX_DEAD_2_1,2);
-	public static final int	BIT_DEAD_2_2 = Integer.parseInt(REGEX_DEAD_2_1,2);
-	public static final int	BIT_DEAD_2_3 = Integer.parseInt(REGEX_DEAD_2_1,2);
-	public static final int	BIT_DEAD_2_4 = Integer.parseInt(REGEX_DEAD_2_1,2);
+	public static final int	BIT_DEAD_2_2 = Integer.parseInt(REGEX_DEAD_2_2,2);
+	public static final int	BIT_DEAD_2_3 = Integer.parseInt(REGEX_DEAD_2_3,2);
+	public static final int	BIT_DEAD_2_4 = Integer.parseInt(REGEX_DEAD_2_4,2);
+	public static final int	BIT_DEAD_2_5 = Integer.parseInt(REGEX_DEAD_2_5,2);
+	public static final int	BIT_DEAD_2_6 = Integer.parseInt(REGEX_DEAD_2_6,2);
 	public static final int	BIT_MASK_8 = Integer.parseInt("11111111",2);
 	public static final int	BIT_MASK_7 = Integer.parseInt("1111111",2);
 	public static final int	BIT_MASK_6 = Integer.parseInt("111111",2);
@@ -196,9 +202,7 @@ public class GameState {
 		}
 		return nexts;
 	}
-	public int heuristicFunction(){
-		return 0;
-	}
+
 	public int evaluate(){
 		
 		if(checkConnect(MAX_PLAYER,WIN_CONNECT)) return MAX_STATE_VALUE;
@@ -220,103 +224,9 @@ public class GameState {
 		}
 		
 		return maxplayerTotal+minplayerTotal;//maxplayerTotal/5*2+minplayerTotal/5*3;
-		
-		//return 0;
+
 	}
-	public int evaluateAll(int side){
-		int posValues[][][] = new int[ROWS][COLS][4];
-		
-		//check horizontal
-		for(int i=0; i<ROWS; i++){
-			String s = combineBitStrings(intToRow(state[side][i]),intToRow(state[1-side][i]));
-			evaluatePatternHorizontal(s, i, 0, posValues);
-		}
-		/*
-		for(int i=0; i<ROWS; i++){
-			for(int j=0; j<COLS; j++){
-				System.out.print(posValues[i][j][0]+"\t");
-			}
-			System.out.println();
-		}
-		*/
-		
-		int total = 0;
-		for(int i=0; i<ROWS; i++){
-			for(int j=0; j<COLS; j++){
-				total+=evaluateValues(posValues[i][j])+1;
-			}
-		}
-		
-		return total;
-	}
-	public void evaluatePatternHorizontal(String s, int r, int type, int posValues[][][]){
-		Matcher matcher = PATTERN_LIVE_4.matcher(s);
-		while(matcher.find()){
-			int start = matcher.start();
-			int end = matcher.end();
-			for(int i=start; i<end; i++){
-				if(s.charAt(i)=='1'){
-					posValues[r][i][type]=LIVE_4;
-				}
-			}
-		}
-		matcher = PATTERN_DEAD_4.matcher(s);
-		while(matcher.find()){
-			int start = matcher.start();
-			int end = matcher.end();
-			for(int i=start; i<end; i++){
-				if(s.charAt(i)=='1'){
-					posValues[r][i][type]=DEAD_4;
-				}
-			}
-		}
-		matcher = PATTERN_LIVE_3.matcher(s);
-		while(matcher.find()){
-			int start = matcher.start();
-			int end = matcher.end();
-			for(int i=start; i<end; i++){
-				if(s.charAt(i)=='1'){
-					posValues[r][i][type]=LIVE_3;
-				}
-			}
-		}
-		
-		matcher = PATTERN_DEAD_3.matcher(s);
-		while(matcher.find()){
-			int start = matcher.start();
-			int end = matcher.end();
-			for(int i=start; i<end; i++){
-				if(s.charAt(i)=='1'){
-					posValues[r][i][type]=DEAD_4;
-				}
-			}
-		}
-		
-		matcher = PATTERN_LIVE_2.matcher(s);
-		while(matcher.find()){
-			int start = matcher.start();
-			int end = matcher.end();
-			for(int i=start; i<end; i++){
-				if(s.charAt(i)=='1'){
-					posValues[r][i][type]=LIVE_2;
-					System.out.println("live 2 at pos"+" r="+r+" col="+i);
-				}
-			}
-		}
-		
-		matcher = PATTERN_DEAD_2.matcher(s);
-		while(matcher.find()){
-			System.out.println("find dead 2");
-			int start = matcher.start();
-			int end = matcher.end();
-			for(int i=start; i<end; i++){
-				if(s.charAt(i)=='1'){
-					posValues[r][i][type]=DEAD_2;
-					System.out.println("dead 2 at pos"+" r="+r+" col="+i);
-				}
-			}
-		}
-	}
+
 	public int evaluatePos3(int r, int c, int side){
 		int[] values = new int[4];
 		
@@ -486,6 +396,9 @@ public class GameState {
 			int dead3_5 = (BIT_DEAD_3_5 << idx) >> i;
 			result = checkRegion ^ dead3_5;
 			if(result==0) return DEAD_3;
+			int dead3_6 = (BIT_DEAD_3_6 << idx) >> i;
+			result = checkRegion ^ dead3_6;
+			if(result==0) return DEAD_3;
 			//System.out.println("mask = "+ intToRow(pattern)+" result = "+intToRow(result)+ " other side = "+intToRow(influence));
 		}
 		
@@ -495,11 +408,11 @@ public class GameState {
 			if (blocked!=0) continue;
 			int checkRegion = thisSidePattern & mask;
 			
-			int dead3_6 = (BIT_DEAD_3_6 << idx) >> i;
-			int result = checkRegion ^ dead3_6;
-			if(result==0) return DEAD_3;
 			int dead3_7 = (BIT_DEAD_3_7 << idx) >> i;
-			result = checkRegion ^ dead3_7;
+			int result = checkRegion ^ dead3_7;
+			if(result==0) return DEAD_3;
+			int dead3_8 = (BIT_DEAD_3_8 << idx) >> i;
+			result = checkRegion ^ dead3_8;
 			if(result==0) return DEAD_3;
 			//System.out.println("mask = "+ intToRow(pattern)+" result = "+intToRow(result)+ " other side = "+intToRow(influence));
 		}
@@ -528,6 +441,12 @@ public class GameState {
 			int dead2_2 = (BIT_DEAD_2_2 << idx) >> i;
 			result = checkRegion ^ dead2_2;
 			if(result==0) return DEAD_2;
+			int dead2_3 = (BIT_DEAD_2_3 << idx) >> i;
+			result = checkRegion ^ dead2_3;
+			if(result==0) return DEAD_2;
+			int dead2_4 = (BIT_DEAD_2_4 << idx) >> i;
+			result = checkRegion ^ dead2_4;
+			if(result==0) return DEAD_2;
 			//System.out.println("mask = "+ intToRow(pattern)+" result = "+intToRow(result)+ " other side = "+intToRow(influence));
 		}
 		
@@ -537,8 +456,8 @@ public class GameState {
 			if (blocked!=0) continue;
 			int checkRegion = thisSidePattern & mask;
 			
-			int dead2_3 = (BIT_DEAD_2_3 << idx) >> i;
-			int result = checkRegion ^ dead2_3;
+			int dead2_5 = (BIT_DEAD_2_5 << idx) >> i;
+			int result = checkRegion ^ dead2_5;
 			if(result==0) return DEAD_2;
 			//System.out.println("mask = "+ intToRow(pattern)+" result = "+intToRow(result)+ " other side = "+intToRow(influence));
 		}
@@ -549,8 +468,8 @@ public class GameState {
 			if (blocked!=0) continue;
 			int checkRegion = thisSidePattern & mask;
 			
-			int dead2_4 = (BIT_DEAD_2_4 << idx) >> i;
-			int result = checkRegion ^ dead2_4;
+			int dead2_6 = (BIT_DEAD_2_6 << idx) >> i;
+			int result = checkRegion ^ dead2_6;
 			if(result==0) return DEAD_2;
 			//System.out.println("mask = "+ intToRow(pattern)+" result = "+intToRow(result)+ " other side = "+intToRow(influence));
 		}
@@ -656,24 +575,7 @@ public class GameState {
 	}
 	public int evaluatePattern2(String s, int posIdx){
 		
-		for(int i=0; i<REGEX_LIVE_4.length(); i++){
-			if(s.indexOf(REGEX_LIVE_4, posIdx-i)!=-1){
-				return LIVE_4;
-			}
-		}
-		/*
-		for(int i=0; i<REGEX_LIVE_3.length(); i++){
-			if(s.indexOf(REGEX_LIVE_3, posIdx-i)!=-1){
-				return LIVE_3;
-			}
-		}
-		for(int i=0; i<REGEX_LIVE_2.length(); i++){
-			if(s.indexOf(REGEX_LIVE_2, posIdx-i)!=-1){
-				return LIVE_2;
-			}
-		}
-		*/
-	/*	
+
 		Matcher matcher = PATTERN_LIVE_4.matcher(s);
 		while(matcher.find()){
 			int start = matcher.start();
@@ -715,7 +617,7 @@ public class GameState {
 			int start = matcher.start();
 			int end = matcher.end();
 	        if(posIdx>=start && posIdx<end) return DEAD_2;
-		}*/
+		}
 		return 0;
 	}
 	public int evaluatePos(int r, int c, int side){

@@ -20,7 +20,6 @@ public class MainUI extends JPanel{
    public int SEARCH_DEPTH;
    public GameState gameState;
    public GameTree agent;
-   
    public MainUI(){
 	   X_OFFSET=8;
 	   Y_OFFSET=30;
@@ -45,7 +44,10 @@ public class MainUI extends JPanel{
 	   return pos;
    }
    public void agentMove(){
+	   long start = System.currentTimeMillis();
 	   GameState nextBest = agent.nextMove();
+	   long end = System.currentTimeMillis();
+	   System.out.println("accumulated move calculation time = "+(end-start)/1000.0+" s");
 	   gameState.setGameState(nextBest.getGameState());
 	   gameState.setCurrSide(1-gameState.getCurrSide());
    }
@@ -62,7 +64,9 @@ public class MainUI extends JPanel{
 			}
 	   }
 	   
-	   System.out.println(gameState);
+//	   System.out.println(gameState);
+	   System.out.println("successful query saved states = "+agent.stateValueQuerySuccessfulCount+"/"+agent.stateValue.size()
+			   				+" Successful query saved nodes = "+agent.hmQuerySuccessfulCount+"/"+agent.hm.size());
 
 	   int[][] states = gameState.getGameState();   
 	   int[] bitMaps = new int[GRID_COLS];
@@ -108,6 +112,7 @@ public class MainUI extends JPanel{
 	    	}else{
 		        Point p = gameboard.posOnGrid(e.getPoint());
 		        if(gameboard.gameState.addPiece((int)p.getX(), (int)p.getY())){
+		        	System.out.println("mouse click "+p);
 			        gameboard.repaint();
 			        
 			        int over = gameboard.gameState.isGameOver();

@@ -15,7 +15,10 @@ public class GameTree {
 	}
 	private GameState currState;	//the current game state
 	private int depthLim;			//number of moves to look ahead
-	private HashMap<Integer, TreeNode> hm;
+	public HashMap<Integer, TreeNode> hm;
+	public int hmQuerySuccessfulCount;
+	public HashMap<Integer, Integer> stateValue;
+	public int stateValueQuerySuccessfulCount;
 	private HashMap<Integer, GameState> stateLibrary;	//key: currstate hash value, value: next state
 	private ZobristHash hasher;
 	private static boolean ENABLE_HASH = true;
@@ -96,6 +99,10 @@ public class GameTree {
 		setCurrState(curr);
 		setDepthLim(dpLim);
 		hasher = new ZobristHash(curr.getRows()*curr.getCols(),3);
+		stateValue = new HashMap<Integer, Integer>();
+		hm = new HashMap<Integer, TreeNode>();
+		hmQuerySuccessfulCount = 0;
+		stateValueQuerySuccessfulCount = 0;
 		if(ENABLE_STATELIB){
 			setStateLibrary();
 		}
@@ -115,26 +122,40 @@ public class GameTree {
 			}
 		}else{
 			hm = new HashMap<Integer, TreeNode>(); //old hash table useless since tree depth changed
+			hmQuerySuccessfulCount = 0;
+			stateValueQuerySuccessfulCount = 0;
 			TreeNode bestNext = minMaxAlphaBeta(currState,1,-1*Integer.MAX_VALUE, Integer.MAX_VALUE);
+			
 			return bestNext.s;
 		}
 	}
 
 	public TreeNode minMaxAlphaBeta(GameState curr, int depth, int alpha, int beta){
+		
 		if(ENABLE_HASH){
 			//query hash table
 			TreeNode queryRoot = hm.get(hasher.hash(curr));
 			if(queryRoot!=null) {
 				//System.out.println("query result=\n"+queryRoot.s);
+				hmQuerySuccessfulCount++;
 				return queryRoot;
 			}
 		}
 		List<GameState> nextPossibleStates = curr.nextPossibleStates();
+		//System.out.println("DEPTH = "+depth+ " nextPossibleStates = "+nextPossibleStates.size());
 		TreeNode root = new TreeNode();	//the node to return
 		GameState selection = null;		//the state selected
 		if(nextPossibleStates.size()==0){
 			root.s=curr;
-			root.v=curr.evaluate();
+			int stateHash = hasher.hash(curr);
+			Integer v = stateValue.get(stateHash);
+			if(v!=null){
+				root.v = v;
+				stateValueQuerySuccessfulCount++;
+			}else{
+				root.v=curr.evaluate();
+				stateValue.put(stateHash, root.v);
+			}
 		}
 		else if(curr.getCurrSide() == GameState.MAX_PLAYER){
 			int max = 0;
@@ -142,7 +163,17 @@ public class GameTree {
 			for(GameState s: nextPossibleStates){
 				int value = 0;
 				if(depth==depthLim){
-					value = s.evaluate();	
+					
+					int stateHash = hasher.hash(s);
+					Integer v = stateValue.get(stateHash);
+					if(v!=null){
+						value = v;
+						stateValueQuerySuccessfulCount++;
+					}else{
+						value = s.evaluate();
+						stateValue.put(stateHash, value);
+					}		
+						
 				}else{
 					TreeNode bestNext = minMaxAlphaBeta(s, depth+1, alpha, beta);
 					value = bestNext.v;
@@ -177,7 +208,15 @@ public class GameTree {
 			for(GameState s: nextPossibleStates){
 				int value = 0;
 				if(depth==depthLim){
-					value = s.evaluate();	
+					int stateHash = hasher.hash(s);
+					Integer v = stateValue.get(stateHash);
+					if(v!=null){
+						value = v;
+						stateValueQuerySuccessfulCount++;
+					}else{
+						value = s.evaluate();
+						stateValue.put(stateHash, value);
+					}	
 				}else{
 					TreeNode bestNext = minMaxAlphaBeta(s, depth+1, alpha, beta);
 					value = bestNext.v;

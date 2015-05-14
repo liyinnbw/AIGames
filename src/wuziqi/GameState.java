@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 public class GameState {
 	public static final int MIN_PLAYER = 1;
 	public static final int MAX_PLAYER = 0;
-	public static final int MIN_STATE_VALUE = -1*Integer.MAX_VALUE;
+	public static final int MIN_STATE_VALUE = 0-Integer.MAX_VALUE;
 	public static final int MAX_STATE_VALUE = Integer.MAX_VALUE;
 	public static final int TIE = 2;
 	public static int WIN_CONNECT = 5;
@@ -79,6 +79,16 @@ public class GameState {
 	private int currSide;
 	private int[][] state;	//[0][]: max player [1][]: min player
 	private int[] colMask;	//for extracting bit at specific column of a row
+	private int latestMove;
+
+	public int getLatestMove() {
+		return latestMove;
+	}
+
+	public void setLatestMove(int latestMove) {
+		this.latestMove = latestMove;
+	}
+
 	public int getRows() {
 		return ROWS;
 	}
@@ -141,6 +151,7 @@ public class GameState {
 		
 		if(wBit!=0 || bBit!=0) return false;
 		state[currSide][y] |= bitMap;
+		setLatestMove(y*COLS+x);
 		setCurrSide(1-currSide);
 		return true;
 	}
@@ -179,10 +190,32 @@ public class GameState {
 		for(int i=0; i<ROWS; i++){
 			occupied[i]=state[0][i] | state[1][i];
 		}
-		
+
+		/*
+		//prioritize the latestMove first, maximum 8 possibilities
+		int latestR = latestMove/COLS;
+		int latestC = latestMove%COLS;
+		//System.out.println("latest R = "+latestR+" latest C = "+latestC );
+
+		for(int i=-1; i<=1; i++){
+			if(latestR+i<0 || latestR+i>= ROWS) continue;
+			int row = occupied[latestR+i];
+			for(int j=-1; j<=1; j++){
+				if(latestC+j<0 || latestC+j>=COLS) continue;
+				if(i==0 && j==0) continue;
+				int newRow = row | colMask[latestC+j];
+				if(newRow != row){
+					GameState s = new GameState(ROWS, COLS, currSide, state);
+					s.addPiece(latestC+j,latestR+i); //addPiece uses grid coordinates, so j,i
+					nexts.add(s);
+				}
+			}
+		}
+		*/
 		for(int i=0; i<ROWS; i++){
 			int row = occupied[i];
 			for(int j=0; j<COLS; j++){
+				//if(Math.abs(latestR-i)<2 && Math.abs(latestC-j)<2) continue;
 				int newRow = row | colMask[j];
 				if (newRow!=row && !isTooFar(occupied,i,j)){
 					GameState s = new GameState(ROWS, COLS, currSide, state);
@@ -206,7 +239,7 @@ public class GameState {
 			for(int j=0; j<COLS; j++){
 				int maxplayerValue=evaluatePos(i,j,MAX_PLAYER);
 				if(maxplayerValue==MAX_STATE_VALUE) return maxplayerValue;
-				int minplayerValue=-1*evaluatePos(i,j,MIN_PLAYER);
+				int minplayerValue=0-evaluatePos(i,j,MIN_PLAYER);
 				if(minplayerValue==MIN_STATE_VALUE) return minplayerValue;
 				
 				maxplayerTotal+=maxplayerValue+1;

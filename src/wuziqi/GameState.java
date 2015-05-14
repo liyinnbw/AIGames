@@ -79,6 +79,7 @@ public class GameState {
 	private int currSide;
 	private int[][] state;	//[0][]: max player [1][]: min player
 	private int[] colMask;	//for extracting bit at specific column of a row
+	private int[][][][] value;//SIDE,ROW,COL,DIRECTION
 	private int latestMove;
 
 	public int getLatestMove() {
@@ -127,17 +128,37 @@ public class GameState {
 	public void initState(){
 		state = new int[2][ROWS];
 	}
+	public int[][][][] getValue() {
+		return value;
+	}
+
+	public void setValue(int[][][][] v) {
+		value = new int[2][ROWS][COLS][5]; 
+		for(int k=0; k<2; k++){
+			for(int i=0; i<ROWS; i++){
+				for(int j=0; j<COLS; j++){
+					System.arraycopy(v[k][i][j], 0, value[k][i][j], 0, 5);
+				}
+			}
+		}
+	}
+	public void initValue(){
+		value = new int[2][ROWS][COLS][5];
+	}
+
 	public GameState(int r, int c, int side){
 		setRows(r);
 		setCols(c);
 		setCurrSide(side);
 		initState();
+		initValue();
 	}
-	public GameState(int r, int c, int side, int[][] state){
+	public GameState(int r, int c, int side, int[][] state){//, int[][][][] value){
 		setRows(r);
 		setCols(c);
 		setCurrSide(side);
 		setGameState(state);
+		//setValue (value);
 	}
 	
 	public boolean addPiece(int x, int y){
@@ -152,6 +173,7 @@ public class GameState {
 		if(wBit!=0 || bBit!=0) return false;
 		state[currSide][y] |= bitMap;
 		setLatestMove(y*COLS+x);
+		updateValue(y,x);
 		setCurrSide(1-currSide);
 		return true;
 	}
@@ -191,7 +213,7 @@ public class GameState {
 			occupied[i]=state[0][i] | state[1][i];
 		}
 
-		/*
+		
 		//prioritize the latestMove first, maximum 8 possibilities
 		int latestR = latestMove/COLS;
 		int latestC = latestMove%COLS;
@@ -211,14 +233,14 @@ public class GameState {
 				}
 			}
 		}
-		*/
+		
 		for(int i=0; i<ROWS; i++){
 			int row = occupied[i];
 			for(int j=0; j<COLS; j++){
-				//if(Math.abs(latestR-i)<2 && Math.abs(latestC-j)<2) continue;
+				if(Math.abs(latestR-i)<2 && Math.abs(latestC-j)<2) continue;
 				int newRow = row | colMask[j];
 				if (newRow!=row && !isTooFar(occupied,i,j)){
-					GameState s = new GameState(ROWS, COLS, currSide, state);
+					GameState s = new GameState(ROWS, COLS, currSide, state);//, value);
 					s.addPiece(j,i); //addPiece uses grid coordinates, so j,i
 					nexts.add(s);
 				}
@@ -235,20 +257,36 @@ public class GameState {
 		int maxplayerTotal = 0;
 		int minplayerTotal = 0;
 		
+		
 		for(int i=0; i<ROWS; i++){
 			for(int j=0; j<COLS; j++){
-				int maxplayerValue=evaluatePos(i,j,MAX_PLAYER);
-				if(maxplayerValue==MAX_STATE_VALUE) return maxplayerValue;
-				int minplayerValue=0-evaluatePos(i,j,MIN_PLAYER);
-				if(minplayerValue==MIN_STATE_VALUE) return minplayerValue;
-				
-				maxplayerTotal+=maxplayerValue+1;
-				minplayerTotal+=minplayerValue-1;
+				//only need to calculate for non-zero pos
+				if((state[MAX_PLAYER][i] & colMask[j])!=0){
+					int maxplayerValue=evaluatePos(i,j,MAX_PLAYER);
+					maxplayerTotal+=(maxplayerValue+1);
+				}
+				else if((state[MIN_PLAYER][i] & colMask[j])!=0){
+					int minplayerValue=0-evaluatePos(i,j,MIN_PLAYER);
+					minplayerTotal+=(minplayerValue-1);
+				}
 			}
 		}
 		
 		return maxplayerTotal+minplayerTotal;//maxplayerTotal/5*2+minplayerTotal/5*3;
 
+	}
+	
+	//TODO: except for the pos newly added, the rest only need to update 1 direction and reevaluate pattern.
+	public int updateValue(int r, int c){
+		
+		//update the newly added pos
+		
+		//update horizontal
+		for(int i=0; i<COLS; i++){
+			
+		}
+		
+		return 0;
 	}
 
 	public int evaluatePos(int r, int c, int side){
@@ -344,8 +382,15 @@ public class GameState {
 			}
 		}
 		values[3] = evaluatePattern(thisSideBits, otherSideBits, ROWS-1-idx);
-
-		return evaluateValues(values);
+		int overall = evaluateValues(values);
+/*		
+		value[side][r][c][0]= overall;
+		value[side][r][c][1]=values[0];
+		value[side][r][c][2]=values[1];
+		value[side][r][c][3]=values[2];
+		value[side][r][c][4]=values[3];
+*/		
+		return overall;
 	}
 	public int evaluatePattern(int thisSidePattern, int otherSidePattern, int idx ){
 		

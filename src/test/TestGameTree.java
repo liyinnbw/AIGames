@@ -2,6 +2,8 @@ package test;
 
 import static org.junit.Assert.assertEquals;
 
+import java.awt.Point;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -16,10 +18,6 @@ public class TestGameTree {
 	@Before
 	public void init() {
 		gt = new GameTree(new GameState(ROWS,COLS,GameState.MAX_PLAYER),4);
-	}
-
-	@Test
-	public void testNextMove(){
 		GameState g = gt.getCurrState();
 		g.addPiece(7, 8);
 		g.addPiece(7, 7);
@@ -30,8 +28,21 @@ public class TestGameTree {
 		g.addPiece(5, 7);
 		g.addPiece(5, 5);
 		g.addPiece(7, 5);
+	}
+
+	@Test
+	public void testNextMove(){
+		
 		System.out.println(gt.getCurrState());
-		GameState next = gt.nextMove();
+		Point next = gt.nextMove();
 		System.out.println(next);
 	}
+	
+	/*
+	@Test
+	public void testReduceConsideration(){
+		gt.reduceConsideration(gt.getCurrState().nextPossibleStates(),GameState.MAX_PLAYER);
+		gt.reduceConsideration(gt.getCurrState().nextPossibleStates(),GameState.MIN_PLAYER);
+	}
+	*/
 }

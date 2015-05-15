@@ -1,6 +1,10 @@
 package test;
 
 import static org.junit.Assert.*;
+
+import java.awt.Point;
+import java.util.Stack;
+
 import wuziqi.GameState;
 
 import org.junit.Before;
@@ -15,6 +19,35 @@ public class TestGameState {
 		g = new GameState(ROWS,COLS,GameState.MAX_PLAYER);
 	}
 
+	@Test
+	public void testCopyStack(){
+		Point a = new Point(1,2);
+		Point b = new Point(2,3);
+		Stack<Point> src = new Stack<Point>();
+		src.push(a);
+		src.push(b);
+		Stack<Point> dest = g.copyStack(src);
+		src.pop();
+		src.pop();
+		assertEquals(dest.size(),2);
+		Point B = dest.pop();
+		//assertNotEquals(B,b);
+		assertEquals((int)B.getX(),2);
+		assertEquals((int)B.getY(),3);
+	}
+	@Test
+	public void testRevertOneMove(){
+		g.addPiece(0, 0);
+		g.addPiece(0, 1);
+		System.out.println(g);
+		System.out.println("currSide = "+g.getCurrSide()+" totalMoves = "+g.getMoves().size());
+		g.revertOneMove();
+		System.out.println(g);
+		System.out.println("currSide = "+g.getCurrSide()+" totalMoves = "+g.getMoves().size());
+		g.revertOneMove();
+		System.out.println(g);
+		System.out.println("currSide = "+g.getCurrSide()+" totalMoves = "+g.getMoves().size());
+	}
 	@Test
 	public void testTranspose(){
 		int state[] = new int[ROWS];
@@ -89,6 +122,15 @@ public class TestGameState {
 		g.addPiece(1, 1);
 		System.out.println(g);
 		System.out.println(g.nextPossibleStates());
+	}
+	@Test
+	public void testNextPossibleMoves(){
+		g.addPiece(7, 7);
+		g.addPiece(2, 3);
+		g.addPiece(6, 7);
+		System.out.println(g);
+		System.out.println("latestMove = "+g.getMoves().peek());
+		System.out.println(g.nextPossibleMoves());
 	}
 	@Test
 	public void testIsTooFar(){

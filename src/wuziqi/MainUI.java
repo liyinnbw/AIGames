@@ -45,11 +45,10 @@ public class MainUI extends JPanel{
    }
    public void agentMove(){
 	   long start = System.currentTimeMillis();
-	   GameState nextBest = agent.nextMove();
+	   Point nextBestMove = agent.nextMove();
 	   long end = System.currentTimeMillis();
 	   System.out.println("accumulated move calculation time = "+(end-start)/1000.0+" s");
-	   gameState.setGameState(nextBest.getGameState());
-	   gameState.setCurrSide(1-gameState.getCurrSide());
+	   gameState.addPiece((int)nextBestMove.getX(), (int)nextBestMove.getY());
    }
    @Override
    public void paint (Graphics g) {

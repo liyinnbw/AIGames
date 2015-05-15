@@ -1,13 +1,15 @@
 package wuziqi;
 
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class GameState {
-	public static final int MIN_PLAYER = 1;
 	public static final int MAX_PLAYER = 0;
+	public static final int MIN_PLAYER = 1;
 	public static final int MIN_STATE_VALUE = 0-Integer.MAX_VALUE;
 	public static final int MAX_STATE_VALUE = Integer.MAX_VALUE;
 	public static final int TIE = 2;
@@ -74,20 +76,27 @@ public class GameState {
 	public static final int	BIT_MASK_5 = Integer.parseInt("11111",2);
 	public static final int	BIT_MASK_4 = Integer.parseInt("1111",2);
 	
+	
 	private int ROWS;		//tentatively maximum 32
 	private int COLS;		//tentatively maximum 32
 	private int currSide;
 	private int[][] state;	//[0][]: max player [1][]: min player
 	private int[] colMask;	//for extracting bit at specific column of a row
 	private int[][][][] value;//SIDE,ROW,COL,DIRECTION
-	private int latestMove;
+	private Stack<Point> moves;
 
-	public int getLatestMove() {
-		return latestMove;
+	public Stack<Point> getMoves() {
+		return moves;
 	}
-
-	public void setLatestMove(int latestMove) {
-		this.latestMove = latestMove;
+	public Stack<Point> copyStack(Stack<Point> src){
+		Stack<Point> dest = new Stack<Point>();
+		for(Point p: src){
+			dest.push(p);
+		}
+		return dest;
+	}
+	public void setMoves(Stack<Point> moves) {
+		this.moves = copyStack(moves);
 	}
 
 	public int getRows() {
@@ -145,20 +154,28 @@ public class GameState {
 	public void initValue(){
 		value = new int[2][ROWS][COLS][5];
 	}
+	public void initMoves(){
+		moves = new Stack<Point>();
+	}
 
 	public GameState(int r, int c, int side){
 		setRows(r);
 		setCols(c);
 		setCurrSide(side);
 		initState();
-		initValue();
+		initMoves();
+		//initValue();
+		
+
 	}
-	public GameState(int r, int c, int side, int[][] state){//, int[][][][] value){
+	public GameState(int r, int c, int side, int[][] state, Stack<Point> moves){//, int[][][][] value){
 		setRows(r);
 		setCols(c);
 		setCurrSide(side);
 		setGameState(state);
+		setMoves(moves);
 		//setValue (value);
+
 	}
 	
 	public boolean addPiece(int x, int y){
@@ -170,12 +187,28 @@ public class GameState {
 		int wBit = wRow & bitMap;
 		int bBit = bRow & bitMap;
 		
+		//already occupied
 		if(wBit!=0 || bBit!=0) return false;
 		state[currSide][y] |= bitMap;
-		//setLatestMove(y*COLS+x);
+		moves.push(new Point(x,y));
+
 		//updateValue(y,x);
 		setCurrSide(1-currSide);
 		return true;
+	}
+	public boolean revertOneMove(){
+		
+		if(moves.isEmpty()) return false;
+		
+		Point lastMove = moves.pop();
+		int x = (int) lastMove.getX();
+		int y = (int) lastMove.getY();
+		int bitMask = ~ colMask[x];
+		state[1-currSide][y] = state[1-currSide][y] & bitMask;
+		setCurrSide(1-currSide);
+		return true;
+		
+		
 	}
 	public int getBit(int[] s, int r, int c){
 		return s[r] & colMask[c];
@@ -204,6 +237,47 @@ public class GameState {
 		
 		return true;
 	}
+	public List<Point> nextPossibleMoves(){
+		List<Point> nexts = new ArrayList<Point>();
+		if(isGameOver()!=-1) return nexts;
+		
+		int occupied[] = new int[ROWS];
+		for(int i=0; i<ROWS; i++){
+			occupied[i]=state[MAX_PLAYER][i] | state[MIN_PLAYER][i];
+		}
+		
+		//prioritize the latestMove first, maximum 8 possibilities
+		Point latestMove = moves.peek();
+		int latestR = (int) latestMove.getY();
+		int latestC = (int) latestMove.getX();
+		
+		for(int i=-1; i<=1; i++){
+			if(latestR+i<0 || latestR+i>= ROWS) continue;
+			int row = occupied[latestR+i];
+			for(int j=-1; j<=1; j++){
+				if(i==0 && j==0) continue;
+				if(latestC+j<0 || latestC+j>=COLS) continue;
+				int newRow = row | colMask[latestC+j];
+				if(newRow != row){
+					nexts.add(new Point(latestC+j, latestR+i));
+				}
+			}
+		}
+		
+		for(int i=0; i<ROWS; i++){
+			int row = occupied[i];
+			for(int j=0; j<COLS; j++){
+				if(Math.abs(latestR-i)<2 && Math.abs(latestC-j)<2) continue;
+				int newRow = row | colMask[j];
+				if (newRow!=row && !isTooFar(occupied,i,j)){
+					nexts.add(new Point(j, i));
+				}
+	 		}
+		}
+		
+		return nexts;
+		
+	}
 	public List<GameState> nextPossibleStates(){
 		List<GameState> nexts = new ArrayList<GameState>();
 		if(isGameOver()!=-1) return nexts;
@@ -215,8 +289,9 @@ public class GameState {
 
 		
 		//prioritize the latestMove first, maximum 8 possibilities
-		int latestR = latestMove/COLS;
-		int latestC = latestMove%COLS;
+		Point latestMove = moves.peek();
+		int latestR = (int) latestMove.getY();
+		int latestC = (int) latestMove.getX();
 		//System.out.println("latest R = "+latestR+" latest C = "+latestC );
 
 		for(int i=-1; i<=1; i++){
@@ -227,7 +302,7 @@ public class GameState {
 				if(i==0 && j==0) continue;
 				int newRow = row | colMask[latestC+j];
 				if(newRow != row){
-					GameState s = new GameState(ROWS, COLS, currSide, state);//, value);
+					GameState s = new GameState(ROWS, COLS, currSide, state, moves);//, value);
 					s.addPiece(latestC+j,latestR+i); //addPiece uses grid coordinates, so j,i
 					nexts.add(s);
 				}
@@ -240,7 +315,7 @@ public class GameState {
 				if(Math.abs(latestR-i)<2 && Math.abs(latestC-j)<2) continue;
 				int newRow = row | colMask[j];
 				if (newRow!=row && !isTooFar(occupied,i,j)){
-					GameState s = new GameState(ROWS, COLS, currSide, state);//, value);
+					GameState s = new GameState(ROWS, COLS, currSide, state, moves);//, value);
 					s.addPiece(j,i); //addPiece uses grid coordinates, so j,i
 					nexts.add(s);
 				}

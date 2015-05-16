@@ -28,7 +28,7 @@ public class MainUI extends JPanel{
 	   UNIT = 60;
 	   GRID_ROWS = 15;	//vertices, not squares
 	   GRID_COLS = 15;	//vertices, not squares
-	   SEARCH_DEPTH = 4;
+	   SEARCH_DEPTH = 8;
 	   newGame();
    }
    private void newGame(){
@@ -47,7 +47,7 @@ public class MainUI extends JPanel{
 	   long start = System.currentTimeMillis();
 	   Point nextBestMove = agent.nextMove();
 	   long end = System.currentTimeMillis();
-	   System.out.println("accumulated move calculation time = "+(end-start)/1000.0+" s");
+	   System.out.println("move calculation time = "+(end-start)/1000.0+" s");
 	   gameState.addPiece((int)nextBestMove.getX(), (int)nextBestMove.getY());
    }
    @Override

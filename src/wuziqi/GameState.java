@@ -14,6 +14,11 @@ public class GameState {
 	public static final int MAX_STATE_VALUE = Integer.MAX_VALUE;
 	public static final int TIE = 2;
 	public static int WIN_CONNECT = 5;
+	public static final int H_DIRECTION = 1;
+	public static final int V_DIRECTION = 2;
+	public static final int D1_DIRECTION = 3;
+	public static final int D2_DIRECTION = 4;
+	public static final int ALL_DIRECTION = 5;
 	public static final int LIVE_4 = 90;
 	public static final int DOUBLE_DEAD_4 = 90;
 	public static final int DEAD_4_LIVE_3 = 90;
@@ -32,15 +37,16 @@ public class GameState {
 	public static final String REGEX_DEAD_4_3 = "11011";
 	public static final String REGEX_DEAD_4_4 = "10111";
 	public static final String REGEX_DEAD_4_5 = "01111";
-	public static final String REGEX_LIVE_3 = "0011100";
+	//public static final String REGEX_LIVE_3_1 = "011100";
+	public static final String REGEX_LIVE_3_2 = "01110";
+	public static final String REGEX_LIVE_3_3 = "010110";
+	public static final String REGEX_LIVE_3_4 = "011010";
 	public static final String REGEX_DEAD_3_1 = "00111";
 	public static final String REGEX_DEAD_3_2 = "10011";
 	public static final String REGEX_DEAD_3_3 = "11001";
 	public static final String REGEX_DEAD_3_4 = "11100";
 	public static final String REGEX_DEAD_3_5 = "10101";
 	public static final String REGEX_DEAD_3_6 = "01110";
-	public static final String REGEX_DEAD_3_7 = "010110";
-	public static final String REGEX_DEAD_3_8 = "011010";
 	public static final String REGEX_LIVE_2 = "00011000";
 	public static final String REGEX_DEAD_2_1 = "00011";
 	public static final String REGEX_DEAD_2_2 = "00110";
@@ -54,15 +60,16 @@ public class GameState {
 	public static final int BIT_DEAD_4_3 = Integer.parseInt(REGEX_DEAD_4_3,2); 
 	public static final int BIT_DEAD_4_4 = Integer.parseInt(REGEX_DEAD_4_4,2); 
 	public static final int BIT_DEAD_4_5 = Integer.parseInt(REGEX_DEAD_4_5,2);
-	public static final int	BIT_LIVE_3   = Integer.parseInt(REGEX_LIVE_3,2);
+	//public static final int	BIT_LIVE_3_1 = Integer.parseInt(REGEX_LIVE_3_1,2);
+	public static final int	BIT_LIVE_3_2 = Integer.parseInt(REGEX_LIVE_3_2,2);
+	public static final int	BIT_LIVE_3_3 = Integer.parseInt(REGEX_LIVE_3_3,2);
+	public static final int	BIT_LIVE_3_4 = Integer.parseInt(REGEX_LIVE_3_4,2);
 	public static final int	BIT_DEAD_3_1 = Integer.parseInt(REGEX_DEAD_3_1,2);
 	public static final int	BIT_DEAD_3_2 = Integer.parseInt(REGEX_DEAD_3_2,2);
 	public static final int	BIT_DEAD_3_3 = Integer.parseInt(REGEX_DEAD_3_3,2);
 	public static final int	BIT_DEAD_3_4 = Integer.parseInt(REGEX_DEAD_3_4,2);
 	public static final int	BIT_DEAD_3_5 = Integer.parseInt(REGEX_DEAD_3_5,2);
 	public static final int	BIT_DEAD_3_6 = Integer.parseInt(REGEX_DEAD_3_6,2);
-	public static final int	BIT_DEAD_3_7 = Integer.parseInt(REGEX_DEAD_3_7,2);
-	public static final int	BIT_DEAD_3_8 = Integer.parseInt(REGEX_DEAD_3_8,2);
 	public static final int	BIT_LIVE_2   = Integer.parseInt(REGEX_LIVE_2,2);
 	public static final int	BIT_DEAD_2_1 = Integer.parseInt(REGEX_DEAD_2_1,2);
 	public static final int	BIT_DEAD_2_2 = Integer.parseInt(REGEX_DEAD_2_2,2);
@@ -164,10 +171,11 @@ public class GameState {
 		setCurrSide(side);
 		initState();
 		initMoves();
-		//initValue();
+		initValue();
 		
 
 	}
+	/*
 	public GameState(int r, int c, int side, int[][] state, Stack<Point> moves){//, int[][][][] value){
 		setRows(r);
 		setCols(c);
@@ -177,7 +185,7 @@ public class GameState {
 		//setValue (value);
 
 	}
-	
+	*/
 	public boolean addPiece(int x, int y){
 		if(y>=ROWS || x>= COLS || x<0 || y<0) return false;
 		
@@ -191,8 +199,7 @@ public class GameState {
 		if(wBit!=0 || bBit!=0) return false;
 		state[currSide][y] |= bitMap;
 		moves.push(new Point(x,y));
-
-		//updateValue(y,x);
+		//updateValue(y,x,currSide);
 		setCurrSide(1-currSide);
 		return true;
 	}
@@ -206,6 +213,7 @@ public class GameState {
 		int bitMask = ~ colMask[x];
 		state[1-currSide][y] = state[1-currSide][y] & bitMask;
 		setCurrSide(1-currSide);
+		//updateValue(y,x,currSide);
 		return true;
 		
 		
@@ -237,6 +245,32 @@ public class GameState {
 		
 		return true;
 	}
+	public List<Point> checkMustMoves(List<Point> nexts){
+		List<Point> winMoves = new ArrayList<Point>();
+		List<Point> blockWinMoves = new ArrayList<Point>();
+		List<Point> blockThreatMoves = new ArrayList<Point>();
+		
+		for(Point p: nexts){
+			int valueThisSide = evaluatePos((int) p.getY(), (int) p.getX(), currSide, ALL_DIRECTION);
+			int valueOtherSide = evaluatePos((int) p.getY(), (int) p.getX(), 1-currSide, ALL_DIRECTION);
+			
+			if(valueThisSide == DEAD_4 || valueThisSide == LIVE_4){
+				winMoves.add(p);
+				return winMoves;
+			}else if(valueOtherSide == DEAD_4 || valueOtherSide == LIVE_4){
+				blockWinMoves.add(p);
+			}else if(valueOtherSide >=LIVE_3){
+				blockThreatMoves.add(p);
+			}
+		}
+		if(blockWinMoves.size()>0){
+			return blockWinMoves;
+		}
+		if(blockThreatMoves.size()>0){
+			return blockThreatMoves;
+		}
+		return nexts;
+	}
 	public List<Point> nextPossibleMoves(){
 		List<Point> nexts = new ArrayList<Point>();
 		if(isGameOver()!=-1) return nexts;
@@ -246,6 +280,7 @@ public class GameState {
 			occupied[i]=state[MAX_PLAYER][i] | state[MIN_PLAYER][i];
 		}
 		
+		/*
 		//prioritize the latestMove first, maximum 8 possibilities
 		Point latestMove = moves.peek();
 		int latestR = (int) latestMove.getY();
@@ -263,11 +298,11 @@ public class GameState {
 				}
 			}
 		}
-		
+		*/
 		for(int i=0; i<ROWS; i++){
 			int row = occupied[i];
 			for(int j=0; j<COLS; j++){
-				if(Math.abs(latestR-i)<2 && Math.abs(latestC-j)<2) continue;
+				//if(Math.abs(latestR-i)<2 && Math.abs(latestC-j)<2) continue;
 				int newRow = row | colMask[j];
 				if (newRow!=row && !isTooFar(occupied,i,j)){
 					nexts.add(new Point(j, i));
@@ -275,53 +310,10 @@ public class GameState {
 	 		}
 		}
 		
+		nexts = checkMustMoves(nexts);
+		
 		return nexts;
 		
-	}
-	public List<GameState> nextPossibleStates(){
-		List<GameState> nexts = new ArrayList<GameState>();
-		if(isGameOver()!=-1) return nexts;
-		
-		int occupied[] = new int[ROWS];
-		for(int i=0; i<ROWS; i++){
-			occupied[i]=state[0][i] | state[1][i];
-		}
-
-		
-		//prioritize the latestMove first, maximum 8 possibilities
-		Point latestMove = moves.peek();
-		int latestR = (int) latestMove.getY();
-		int latestC = (int) latestMove.getX();
-		//System.out.println("latest R = "+latestR+" latest C = "+latestC );
-
-		for(int i=-1; i<=1; i++){
-			if(latestR+i<0 || latestR+i>= ROWS) continue;
-			int row = occupied[latestR+i];
-			for(int j=-1; j<=1; j++){
-				if(latestC+j<0 || latestC+j>=COLS) continue;
-				if(i==0 && j==0) continue;
-				int newRow = row | colMask[latestC+j];
-				if(newRow != row){
-					GameState s = new GameState(ROWS, COLS, currSide, state, moves);//, value);
-					s.addPiece(latestC+j,latestR+i); //addPiece uses grid coordinates, so j,i
-					nexts.add(s);
-				}
-			}
-		}
-		
-		for(int i=0; i<ROWS; i++){
-			int row = occupied[i];
-			for(int j=0; j<COLS; j++){
-				if(Math.abs(latestR-i)<2 && Math.abs(latestC-j)<2) continue;
-				int newRow = row | colMask[j];
-				if (newRow!=row && !isTooFar(occupied,i,j)){
-					GameState s = new GameState(ROWS, COLS, currSide, state, moves);//, value);
-					s.addPiece(j,i); //addPiece uses grid coordinates, so j,i
-					nexts.add(s);
-				}
-	 		}
-		}
-		return nexts;
 	}
 
 	public int evaluate(){
@@ -339,11 +331,11 @@ public class GameState {
 				
 				//only need to calculate for non-zero pos
 				if((state[MAX_PLAYER][i] & colMask[j])!=0){
-					int maxplayerValue=evaluatePos(i,j,MAX_PLAYER);
+					int maxplayerValue=evaluatePos(i,j,MAX_PLAYER, ALL_DIRECTION);
 					maxplayerTotal+=(maxplayerValue+1);
 				}
 				else if((state[MIN_PLAYER][i] & colMask[j])!=0){
-					int minplayerValue=0-evaluatePos(i,j,MIN_PLAYER);
+					int minplayerValue=0-evaluatePos(i,j,MIN_PLAYER, ALL_DIRECTION);
 					minplayerTotal+=(minplayerValue-1);
 				}
 				
@@ -358,19 +350,25 @@ public class GameState {
 	}
 	
 	//TODO: except for the pos newly added, the rest only need to update 1 direction and reevaluate pattern.
-	public int updateValue(int r, int c){
+	public int updateValue(int r, int c, int side){
 		
-		//evaluate the newly added pos
-		int newPosValue = evaluatePos(r,c,currSide);
+		//evaluate the newly changed pos
+		if((state[side][r] & colMask[c])==0){
+			for(int i=0; i<5; i++){
+				value[side][r][c][i]=0;
+			}
+		}else{
+			int newPosValue = evaluatePos(r,c,side, ALL_DIRECTION);
+		}
 		
 		//update horizontally affected pos
 		for(int i=0; i<COLS; i++){
 			if(i!=c){
 				if((state[MAX_PLAYER][r] & colMask[i])!=0){
-					evaluatePos(r,i, MAX_PLAYER);
+					evaluatePos(r,i, MAX_PLAYER, H_DIRECTION);
 				}
 				else if((state[MIN_PLAYER][r] & colMask[i])!=0){
-					evaluatePos(r,i, MIN_PLAYER);
+					evaluatePos(r,i, MIN_PLAYER, H_DIRECTION);
 				}
 				
 			}
@@ -380,10 +378,10 @@ public class GameState {
 		for(int i=0; i<ROWS; i++){
 			if(i!=r){
 				if((state[MAX_PLAYER][i] & colMask[c])!=0){
-					evaluatePos(i,c, MAX_PLAYER);
+					evaluatePos(i,c, MAX_PLAYER, V_DIRECTION);
 				}
 				else if((state[MIN_PLAYER][i] & colMask[c])!=0){
-					evaluatePos(i,c, MIN_PLAYER);
+					evaluatePos(i,c, MIN_PLAYER, V_DIRECTION);
 				}
 			}	
 		}
@@ -396,10 +394,10 @@ public class GameState {
 			int row = r-i;
 			int col = c-i;
 			if((state[MAX_PLAYER][row] & colMask[col])!=0){
-				evaluatePos(row,col, MAX_PLAYER);
+				evaluatePos(row,col, MAX_PLAYER, D1_DIRECTION );
 			}
 			else if((state[MIN_PLAYER][row] & colMask[col])!=0){
-				evaluatePos(row,col, MIN_PLAYER);
+				evaluatePos(row,col, MIN_PLAYER, D1_DIRECTION );
 			}
 		}
 		for(int i=1; i<ROWS; i++){
@@ -409,10 +407,10 @@ public class GameState {
 			int row = r+i;
 			int col = c+i;
 			if((state[MAX_PLAYER][row] & colMask[col])!=0){
-				evaluatePos(row,col, MAX_PLAYER);
+				evaluatePos(row,col, MAX_PLAYER, D1_DIRECTION );
 			}
 			else if((state[MIN_PLAYER][row] & colMask[col])!=0){
-				evaluatePos(row,col, MIN_PLAYER);
+				evaluatePos(row,col, MIN_PLAYER, D1_DIRECTION );
 			}
 		}
 		
@@ -424,10 +422,10 @@ public class GameState {
 			int row = r-i;
 			int col = c+i;
 			if((state[MAX_PLAYER][row] & colMask[col])!=0){
-				evaluatePos(row,col, MAX_PLAYER);
+				evaluatePos(row,col, MAX_PLAYER, D2_DIRECTION );
 			}
 			else if((state[MIN_PLAYER][row] & colMask[col])!=0){
-				evaluatePos(row,col, MIN_PLAYER);
+				evaluatePos(row,col, MIN_PLAYER, D2_DIRECTION);
 			}
 		}
 		for(int i=1; i<ROWS; i++){
@@ -437,85 +435,27 @@ public class GameState {
 			int row = r+i;
 			int col = c-i;
 			if((state[MAX_PLAYER][row] & colMask[col])!=0){
-				evaluatePos(row,col, MAX_PLAYER);
+				evaluatePos(row,col, MAX_PLAYER, D2_DIRECTION);
 			}
 			else if((state[MIN_PLAYER][row] & colMask[col])!=0){
-				evaluatePos(row,col, MIN_PLAYER);
+				evaluatePos(row,col, MIN_PLAYER, D2_DIRECTION);
 			}
 		}
 		
 		return 0;
 	}
-
-	public int evaluatePos(int r, int c, int side){
-		int[] values = new int[4];
-		
-		//check horizontal
-		int thisSideBits = state[side][r];
-		int otherSideBits = state[1-side][r];
-		values[0] = evaluatePattern(thisSideBits, otherSideBits, COLS-1-c);
-		
-		//check vertical
-		thisSideBits = 0;
-		otherSideBits = 0;
-		for(int i=0; i<ROWS; i++){
-			if(i>0){
-				thisSideBits =  thisSideBits << 1;
-				otherSideBits =  otherSideBits << 1;
-			}
-			int bitThisSide = state[side][i] & colMask[c];
-			int bitOtherSide = state[1-side][i] & colMask[c];
-			if(bitThisSide != 0){
-				thisSideBits |= 1;
-			}else if(bitOtherSide != 0){
-				otherSideBits |= 1;
-			}
-		}
-		values[1] = evaluatePattern(thisSideBits, otherSideBits, ROWS-1-r);
-		
-		//check diagonal \
-		thisSideBits = 0;
-		otherSideBits = 0;
-		int count = 0;
-		for(int i=0; i<ROWS; i++){
-			if(r-i<0 || c-i<0){
-				break;
-			}
-			if(i>0){
-				thisSideBits =  thisSideBits << 1;
-				otherSideBits =  otherSideBits << 1;
-			}
-			if((state[side][r-i] & colMask[c-i])!=0){
-				thisSideBits |= 1;
-			}else if((state[1-side][r-i] & colMask[c-i])!=0){
-				otherSideBits |= 1;
-			}
-			count = i;
-		}
-		int idx = count-1;
-		for(int i=1; i<ROWS; i++){
-			if(r+i>=ROWS || c+i>=COLS){
-				break;
-			}
-			thisSideBits =  thisSideBits << 1;
-			otherSideBits =  otherSideBits << 1;
-			if((state[side][r+i] & colMask[c+i])!=0){
-				thisSideBits |= 1;
-			}else if((state[1-side][r+i] & colMask[c+i])!=0){
-				otherSideBits |= 1;
-			}
-		}
-		values[2] = evaluatePattern(thisSideBits, otherSideBits, ROWS-1-idx);
-		
+	public int testDiagonal(int r, int c, int side){
 		//check diagonal /
-		thisSideBits = 0;
-		otherSideBits = 0;
-		count = 0;
-		for(int i=0; i<ROWS; i++){
+		int thisSideBits = 0;
+		int otherSideBits = 0;
+		boolean isFirst = true;
+		for(int i=ROWS-1; i>=0; i--){
 			if(r-i<0 || c+i>=COLS){
-				break;
+				continue;
 			}
-			if(i>0){
+			if(isFirst){
+				isFirst = false;
+			}else{
 				thisSideBits =  thisSideBits << 1;
 				otherSideBits =  otherSideBits << 1;
 			}
@@ -524,9 +464,8 @@ public class GameState {
 			}else if((state[1-side][r-i] & colMask[c+i])!=0){
 				otherSideBits |= 1;
 			}
-			count = i;
 		}
-		idx = count-1;
+		int count = 0;
 		for(int i=1; i<ROWS; i++){
 			if(r+i>=ROWS || c-i<0){
 				break;
@@ -538,160 +477,298 @@ public class GameState {
 			}else if((state[1-side][r+i] & colMask[c-i])!=0){
 				otherSideBits |= 1;
 			}
+			count++;
 		}
-		values[3] = evaluatePattern(thisSideBits, otherSideBits, ROWS-1-idx);
+		System.out.println("this side bit = "+intToRow(thisSideBits)+" pos from right = "+count);
+		System.out.println("other side bit = "+intToRow(otherSideBits));
+		return evaluatePattern(thisSideBits, otherSideBits, count);
+	}
+	public int evaluatePos(int r, int c, int side, int direction){
+		int thisSideBits = 0;
+		int otherSideBits = 0;
+		if(direction== H_DIRECTION  || direction == ALL_DIRECTION ){
+			//check horizontal
+			thisSideBits = state[side][r];
+			otherSideBits = state[1-side][r];
+			value[side][r][c][1] = evaluatePattern(thisSideBits, otherSideBits, COLS-1-c);
+		}
+		
+		if(direction== V_DIRECTION  || direction == ALL_DIRECTION ){
+			//check vertical
+			thisSideBits = 0;
+			otherSideBits = 0;
+			for(int i=0; i<ROWS; i++){
+				if(i>0){
+					thisSideBits =  thisSideBits << 1;
+					otherSideBits =  otherSideBits << 1;
+				}
+				int bitThisSide = state[side][i] & colMask[c];
+				int bitOtherSide = state[1-side][i] & colMask[c];
+				if(bitThisSide != 0){
+					thisSideBits |= 1;
+				}else if(bitOtherSide != 0){
+					otherSideBits |= 1;
+				}
+			}
+			value[side][r][c][2] = evaluatePattern(thisSideBits, otherSideBits, ROWS-1-r);
+		}
+		
+		if(direction== D1_DIRECTION  || direction == ALL_DIRECTION ){
+			//check diagonal \
+			thisSideBits = 0;
+			otherSideBits = 0;
+			boolean isFirst = true;
+			for(int i=ROWS-1; i>=0; i--){
+				if(r-i<0 || c-i<0){
+					continue;
+				}
+				if(isFirst){
+					isFirst=false;
+				}else{
+					thisSideBits =  thisSideBits << 1;
+					otherSideBits =  otherSideBits << 1;
+				}
+				if((state[side][r-i] & colMask[c-i])!=0){
+					thisSideBits |= 1;
+				}else if((state[1-side][r-i] & colMask[c-i])!=0){
+					otherSideBits |= 1;
+				}
+			}
+			int count = 0;
+			for(int i=1; i<ROWS; i++){
+				if(r+i>=ROWS || c+i>=COLS){
+					break;
+				}
+				thisSideBits =  thisSideBits << 1;
+				otherSideBits =  otherSideBits << 1;
+				if((state[side][r+i] & colMask[c+i])!=0){
+					thisSideBits |= 1;
+				}else if((state[1-side][r+i] & colMask[c+i])!=0){
+					otherSideBits |= 1;
+				}
+				count++;
+			}
+			value[side][r][c][3] = evaluatePattern(thisSideBits, otherSideBits, count);
+		}
+		
+		if(direction== D2_DIRECTION  || direction == ALL_DIRECTION ){
+			//check diagonal /
+			thisSideBits = 0;
+			otherSideBits = 0;
+			boolean isFirst = true;
+			for(int i=ROWS-1; i>=0; i--){
+				if(r-i<0 || c+i>=COLS){
+					continue;
+				}
+				if(isFirst){
+					isFirst=false;
+				}else{
+					thisSideBits =  thisSideBits << 1;
+					otherSideBits =  otherSideBits << 1;
+				}
+				if((state[side][r-i] & colMask[c+i])!=0){
+					thisSideBits |= 1;
+				}else if((state[1-side][r-i] & colMask[c+i])!=0){
+					otherSideBits |= 1;
+				}
+			}
+			int count = 0;
+			for(int i=1; i<ROWS; i++){
+				if(r+i>=ROWS || c-i<0){
+					break;
+				}
+				thisSideBits =  thisSideBits << 1;
+				otherSideBits =  otherSideBits << 1;
+				if((state[side][r+i] & colMask[c-i])!=0){
+					thisSideBits |= 1;
+				}else if((state[1-side][r+i] & colMask[c-i])!=0){
+					otherSideBits |= 1;
+				}
+				count++;
+			}
+			value[side][r][c][4] = evaluatePattern(thisSideBits, otherSideBits, count);
+		}
+		
+		int values[] = new int[4];
+		values[0] = value[side][r][c][1];
+		values[1] = value[side][r][c][2];
+		values[2] = value[side][r][c][3];
+		values[3] = value[side][r][c][4];
+		
 		int overall = evaluateValues(values);
 		
-//		value[side][r][c][0]= overall+1;
-//		value[side][r][c][1]=values[0];
-//		value[side][r][c][2]=values[1];
-//		value[side][r][c][3]=values[2];
-//		value[side][r][c][4]=values[3];
+		value[side][r][c][0]= overall+1;
 		
 		return overall;
 	}
-	public int evaluatePattern(int thisSidePattern, int otherSidePattern, int idx ){
+	public int evaluatePattern(int thisSidePattern, int otherSidePattern, int pos ){
 		
 		for(int i=0; i<6; i++){
-			int mask = (BIT_MASK_6 << idx) >> i;
+			if(i>pos) break;
+			int mask = (BIT_MASK_6 << pos) >> i;
 			int blocked = otherSidePattern & mask;
 			if (blocked!=0) continue;
 			int checkRegion = thisSidePattern & mask;
 			
-			int live4 = (BIT_LIVE_4 << idx) >> i;
+			int live4 = (BIT_LIVE_4 << pos) >> i;
 			int result = checkRegion ^ live4;
 			if(result==0) return LIVE_4;
 		}
 		for(int i=0; i<5; i++){
-			int mask = (BIT_MASK_5 << idx) >> i;
+			if(i>pos) break;
+			int mask = (BIT_MASK_5 << pos) >> i;
 			int blocked = otherSidePattern & mask;
 			if (blocked!=0) continue;
 			int checkRegion = thisSidePattern & mask;
 			
-			int dead4_1 = (BIT_DEAD_4_1 << idx) >> i;
+			int dead4_1 = (BIT_DEAD_4_1 << pos) >> i;
 			int result = checkRegion ^ dead4_1;
 			if(result==0) return DEAD_4;
-			int dead4_2 = (BIT_DEAD_4_2 << idx) >> i;
+			int dead4_2 = (BIT_DEAD_4_2 << pos) >> i;
 			result = checkRegion ^ dead4_2;
 			if(result==0) return DEAD_4;
-			int dead4_3 = (BIT_DEAD_4_3 << idx) >> i;
+			int dead4_3 = (BIT_DEAD_4_3 << pos) >> i;
 			result = checkRegion ^ dead4_3;
 			if(result==0) return DEAD_4;
-			int dead4_4 = (BIT_DEAD_4_4 << idx) >> i;
+			int dead4_4 = (BIT_DEAD_4_4 << pos) >> i;
 			result = checkRegion ^ dead4_4;
 			if(result==0) return DEAD_4;
-			int dead4_5 = (BIT_DEAD_4_5 << idx) >> i;
+			int dead4_5 = (BIT_DEAD_4_5 << pos) >> i;
 			result = checkRegion ^ dead4_5;
 			if(result==0) return DEAD_4;
 		}
 		
-		for(int i=0; i<7; i++){
-			int mask = (BIT_MASK_7 << idx) >> i;
+		for(int i=0; i<5; i++){
+			if(i>pos) break;
+			int mask = (BIT_MASK_5 << pos) >> i;
 			int blocked = otherSidePattern & mask;
 			if (blocked!=0) continue;
 			int checkRegion = thisSidePattern & mask;
 			
-			int live3 = (BIT_LIVE_3 << idx) >> i;
-			int result = checkRegion ^ live3;
+			int live3_2 = (BIT_LIVE_3_2 << pos) >> i;
+			int result = checkRegion ^ live3_2;
+			if(result==0) return LIVE_3;
+		}
+		
+		for(int i=0; i<6; i++){
+			if(i>pos) break;
+			int mask = (BIT_MASK_6 << pos) >> i;
+			int blocked = otherSidePattern & mask;
+			if (blocked!=0) continue;
+			int checkRegion = thisSidePattern & mask;
+			
+			int live3_3 = (BIT_LIVE_3_3 << pos) >> i;
+			int result = checkRegion ^ live3_3;
+			if(result==0) return LIVE_3;
+			int live3_4 = (BIT_LIVE_3_4 << pos) >> i;
+			result = checkRegion ^ live3_4;
 			if(result==0) return LIVE_3;
 		}
 		
 		for(int i=0; i<5; i++){
-			int mask = (BIT_MASK_5 << idx) >> i;
+			if(i>pos) break;
+			int mask = (BIT_MASK_5 << pos) >> i;
 			int blocked = otherSidePattern & mask;
 			if (blocked!=0) continue;
 			int checkRegion = thisSidePattern & mask;
 			
-			int dead3_1 = (BIT_DEAD_3_1 << idx) >> i;
+			int dead3_1 = (BIT_DEAD_3_1 << pos) >> i;
 			int result = checkRegion ^ dead3_1;
 			if(result==0) return DEAD_3;
-			int dead3_2 = (BIT_DEAD_3_2 << idx) >> i;
+			int dead3_2 = (BIT_DEAD_3_2 << pos) >> i;
 			result = checkRegion ^ dead3_2;
 			if(result==0) return DEAD_3;
-			int dead3_3 = (BIT_DEAD_3_3 << idx) >> i;
+			int dead3_3 = (BIT_DEAD_3_3 << pos) >> i;
 			result = checkRegion ^ dead3_3;
 			if(result==0) return DEAD_3;
-			int dead3_4 = (BIT_DEAD_3_4 << idx) >> i;
+			int dead3_4 = (BIT_DEAD_3_4 << pos) >> i;
 			result = checkRegion ^ dead3_4;
 			if(result==0) return DEAD_3;
-			int dead3_5 = (BIT_DEAD_3_5 << idx) >> i;
+			int dead3_5 = (BIT_DEAD_3_5 << pos) >> i;
 			result = checkRegion ^ dead3_5;
 			if(result==0) return DEAD_3;
-			int dead3_6 = (BIT_DEAD_3_6 << idx) >> i;
+			int dead3_6 = (BIT_DEAD_3_6 << pos) >> i;
 			result = checkRegion ^ dead3_6;
 			if(result==0) return DEAD_3;
 		}
 		
-		for(int i=0; i<6; i++){
-			int mask = (BIT_MASK_6 << idx) >> i;
-			int blocked = otherSidePattern & mask;
-			if (blocked!=0) continue;
-			int checkRegion = thisSidePattern & mask;
-			
-			int dead3_7 = (BIT_DEAD_3_7 << idx) >> i;
-			int result = checkRegion ^ dead3_7;
-			if(result==0) return DEAD_3;
-			int dead3_8 = (BIT_DEAD_3_8 << idx) >> i;
-			result = checkRegion ^ dead3_8;
-			if(result==0) return DEAD_3;
-		}
-		
 		for(int i=0; i<8; i++){
-			int mask = (BIT_MASK_8 << idx) >> i;
+			if(i>pos) break;
+			int mask = (BIT_MASK_8 << pos) >> i;
 			int blocked = otherSidePattern & mask;
 			if (blocked!=0) continue;
 			int checkRegion = thisSidePattern & mask;
 			
-			int live2 = (BIT_LIVE_2 << idx) >> i;
+			int live2 = (BIT_LIVE_2 << pos) >> i;
 			int result = checkRegion ^ live2;
 			if(result==0) return LIVE_2;
 		}
 		
 		for(int i=0; i<5; i++){
-			int mask = (BIT_MASK_5 << idx) >> i;
+			if(i>pos) break;
+			int mask = (BIT_MASK_5 << pos) >> i;
 			int blocked = otherSidePattern & mask;
 			if (blocked!=0) continue;
 			int checkRegion = thisSidePattern & mask;
 			
-			int dead2_1 = (BIT_DEAD_2_1 << idx) >> i;
+			int dead2_1 = (BIT_DEAD_2_1 << pos) >> i;
 			int result = checkRegion ^ dead2_1;
 			if(result==0) return DEAD_2;
-			int dead2_2 = (BIT_DEAD_2_2 << idx) >> i;
+			int dead2_2 = (BIT_DEAD_2_2 << pos) >> i;
 			result = checkRegion ^ dead2_2;
 			if(result==0) return DEAD_2;
-			int dead2_3 = (BIT_DEAD_2_3 << idx) >> i;
+			int dead2_3 = (BIT_DEAD_2_3 << pos) >> i;
 			result = checkRegion ^ dead2_3;
 			if(result==0) return DEAD_2;
-			int dead2_4 = (BIT_DEAD_2_4 << idx) >> i;
+			int dead2_4 = (BIT_DEAD_2_4 << pos) >> i;
 			result = checkRegion ^ dead2_4;
 			if(result==0) return DEAD_2;
 		}
-		
 		for(int i=0; i<6; i++){
-			int mask = (BIT_MASK_6 << idx) >> i;
+			if(i>pos) break;
+			int mask = (BIT_MASK_6 << pos) >> i;
 			int blocked = otherSidePattern & mask;
 			if (blocked!=0) continue;
 			int checkRegion = thisSidePattern & mask;
 			
-			int dead2_5 = (BIT_DEAD_2_5 << idx) >> i;
+			int dead2_5 = (BIT_DEAD_2_5 << pos) >> i;
 			int result = checkRegion ^ dead2_5;
 			if(result==0) return DEAD_2;
 		}
-		
 		for(int i=0; i<7; i++){
-			int mask = (BIT_MASK_7 << idx) >> i;
+			if(i>pos) break;
+			int mask = (BIT_MASK_7 << pos) >> i;
 			int blocked = otherSidePattern & mask;
 			if (blocked!=0) continue;
 			int checkRegion = thisSidePattern & mask;
 			
-			int dead2_6 = (BIT_DEAD_2_6 << idx) >> i;
+			int dead2_6 = (BIT_DEAD_2_6 << pos) >> i;
 			int result = checkRegion ^ dead2_6;
 			if(result==0) return DEAD_2;
 		}
 		
 		return 0;		
 	}
-
+	
+	public int dead2_5test (int thisSidePattern, int otherSidePattern, int pos){
+		for(int i=0; i<6; i++){
+			if(i>pos) break;
+			System.out.println("i = "+i);
+			int mask = (BIT_MASK_6 << pos) >> i;
+			int blocked = otherSidePattern & mask;
+			System.out.println("mask   = "+intToRow(mask));
+			System.out.println("bocked = "+intToRow(blocked));
+			if (blocked!=0) continue;
+			int checkRegion = thisSidePattern & mask;
+			System.out.println("check  = "+intToRow(checkRegion));
+			int dead2_5 = (BIT_DEAD_2_5 << pos) >> i;
+			System.out.println("dead2_5= "+intToRow(dead2_5));
+			int result = checkRegion ^ dead2_5;
+			System.out.println("result = "+intToRow(result));
+			if(result==0) return DEAD_2;
+		}
+		return 0;
+	}
 	//precon: a.length() == b.length() and a, b a bit strings
 	public String combineBitStrings(String a, String b){
 		char[] ac = a.toCharArray();

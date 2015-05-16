@@ -27,10 +27,10 @@ public class GameTree {
 	public int hmQuerySuccessfulCount;
 	public HashMap<Integer, TreeNode> stateValue;
 	public int stateValueQuerySuccessfulCount;
-	private HashMap<Integer, GameState> stateLibrary;	//key: currstate hash value, value: next state
+	private HashMap<Integer, Point> moveLib;	//key: currstate hash value, value: next state
 	private ZobristHash hasher;
 	private static boolean ENABLE_HASH = true;
-	private static boolean ENABLE_STATELIB = false;
+	private static boolean ENABLE_MOVELIB = false;
 
 	public int getDepthLim() {
 		return depthLim;
@@ -48,46 +48,18 @@ public class GameTree {
 		this.currState = curr;
 	}
 	public void setStateLibrary(){
-		stateLibrary = new HashMap<Integer, GameState>();
+		moveLib = new HashMap<Integer, Point>();
 		String filename = "stateLib.txt";
 		BufferedReader br = null;
 		try {
 			System.out.println("===== reading state library =====");
 			br = new BufferedReader(new FileReader(filename));
 			String line;
-			int[][] state = new int[2][currState.getRows()];
-			int side =0;
-			int row =0;
-			int hashValue = 0;
-			boolean isCurrentState = true;
-			
 			while ((line = br.readLine()) != null) {
-				if(line.equals("maxplayer:")){
-					state = new int[2][currState.getRows()];
-					side = currState.MAX_PLAYER;
-					row = 0;
-				}else if(line.equals("minplayer:")){
-					side = currState.MIN_PLAYER;
-					row = 0;
-				}else{
-					state[side][row]=Integer.parseInt(line,2);
-					row++;
-					if(row>=currState.getRows() && side == currState.MIN_PLAYER){
-						GameState s = new GameState(currState.getRows(), currState.getCols(), 0 , state, currState.getMoves());//, currState.getValue());
-						if(isCurrentState){
-							System.out.println("is current state");
-							hashValue = hasher.hash(s);
-							isCurrentState = !isCurrentState;
-						}else{
-							System.out.println("is next state");
-							stateLibrary.put(hashValue, s);
-							isCurrentState = !isCurrentState;
-						}
-					}
-				}
+				//TODO: store moves to library
 			}
-			System.out.println(stateLibrary.size());
-			for (HashMap.Entry<Integer, GameState> entry : stateLibrary.entrySet()){
+			System.out.println(moveLib.size());
+			for (HashMap.Entry<Integer, Point> entry : moveLib.entrySet()){
 				System.out.println(entry.getValue());
 			}
 			
@@ -111,33 +83,33 @@ public class GameTree {
 		hm = new HashMap<Integer, TreeNode>();
 		hmQuerySuccessfulCount = 0;
 		stateValueQuerySuccessfulCount = 0;
-		if(ENABLE_STATELIB){
+		if(ENABLE_MOVELIB){
 			setStateLibrary();
 		}
 	}
 	
 	public Point nextMove(){
 		//if state lib is used, query it first
-		if(ENABLE_STATELIB){
-			GameState libState = stateLibrary.get(hasher.hash(currState));
-			if (libState!=null){
+		if(ENABLE_MOVELIB){
+			Point libMove = moveLib.get(hasher.hash(currState));
+			if (libMove!=null){
 				System.out.println("find next move in library");
-				return new Point(-1,-1); //TODO: state lib need to return move instead of state
+				return libMove;
 			}
 		}
 		
 		//clean outdated hash
-		int outdatedCount = 0;
-		int currTotalMoveCount = currState.getMoves().size();
-		Iterator<HashMap.Entry<Integer, TreeNode>> it = stateValue.entrySet().iterator();
-		while(it.hasNext()){
-			HashMap.Entry<Integer, TreeNode> entry = it.next();
-			if(entry.getValue().moveCount<currTotalMoveCount){
-				it.remove();
-				outdatedCount++;
-			}
-		}
-		System.out.println("cleared outdated hash = "+outdatedCount+" current hash size = "+stateValue.size());
+		//int outdatedCount = 0;
+		//int currTotalMoveCount = currState.getMoves().size();
+		//Iterator<HashMap.Entry<Integer, TreeNode>> it = stateValue.entrySet().iterator();
+		//while(it.hasNext()){
+		//	HashMap.Entry<Integer, TreeNode> entry = it.next();
+		//	if(entry.getValue().moveCount<currTotalMoveCount){
+		//		it.remove();
+		//		outdatedCount++;
+		//	}
+		//}
+		//System.out.println("cleared outdated hash = "+outdatedCount+" current hash size = "+stateValue.size());
 		
 		hm = new HashMap<Integer, TreeNode>(); //old hash table useless since tree depth changed
 		hmQuerySuccessfulCount = 0;
@@ -146,7 +118,47 @@ public class GameTree {
 		
 		return bestNext.nextMove;
 	}
+	public List<Point> sortMoves(GameState curr, List<Point> nextPossibleMoves, int side){
+		List<TreeNode> sortable = new ArrayList<TreeNode>();
+		
+		//evaluate all moves
+		for(Point p : nextPossibleMoves){
+			curr.addPiece((int)p.getX(), (int)p.getY());
+			TreeNode t = new TreeNode();
+			t.nextMove = p;
+			t.v = curr.evaluate();
+			curr.revertOneMove();
+			sortable.add(t);
+		}
+		
+		//sort moves by value
+		if(side == GameState.MAX_PLAYER){
+			Collections.sort(sortable,new Comparator<TreeNode>(){
+				@Override
+				public int compare(TreeNode arg0, TreeNode arg1) {	
+					if(arg0.v<arg1.v) return 1;
+					if(arg0.v==arg1.v) return 0;
+					else return -1;
+					
+				}		
+			});
+		}else{
+			Collections.sort(sortable,new Comparator<TreeNode>(){
+				@Override
+				public int compare(TreeNode arg0, TreeNode arg1) {	
+					if(arg0.v<arg1.v) return -1;
+					if(arg0.v==arg1.v) return 0;
+					else return 1;
+				}		
+			});
+		}
 
+		List<Point> sortedMoves = new ArrayList<Point>();
+		for(int i=0; i<sortable.size(); i++){
+			sortedMoves.add(sortable.get(i).nextMove);
+		}
+		return sortedMoves;
+	}
 	public List<Point> reduceConsideration (GameState curr, List<Point> nextPossibleMoves, int side){
 		if(nextPossibleMoves.size()<BEST_SIZE) return nextPossibleMoves;
 		
@@ -230,8 +242,8 @@ public class GameTree {
 		}
 
 		List<Point> nextPossibleMoves = curr.nextPossibleMoves();
-		
-		//if(depth >= depthLim-4){
+		nextPossibleMoves = sortMoves(curr, nextPossibleMoves, curr.getCurrSide());
+		//if(depth >= depthLim-2){
 		//	nextPossibleMoves = reduceConsideration(curr, nextPossibleMoves, curr.getCurrSide());
 		//}
 

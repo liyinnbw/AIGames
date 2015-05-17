@@ -227,6 +227,7 @@ public class TestGameState {
 	}
 	@Test
 	public void testEvaluatePos(){
+		
 		String s[][] = {
 			   {"000000000000000",
 				"001100000000000",
@@ -313,12 +314,102 @@ public class TestGameState {
 			}
 			g.setGameState(state2);
 			g.setCurrSide(GameState.MIN_PLAYER);
+			//System.out.println(g);
+			assertEquals(g.evaluatePos(9, 5, GameState.MAX_PLAYER, GameState.ALL_DIRECTION),  GameState.LIVE_3);
+			assertEquals(g.evaluatePos(5, 5, GameState.MAX_PLAYER, GameState.ALL_DIRECTION), GameState.LIVE_3);
+			assertNotEquals(g.evaluatePos(10, 5, GameState.MAX_PLAYER, GameState.ALL_DIRECTION), GameState.LIVE_3);
+
+			
+			String s3[][] = {
+			   {"000000000000000",
+				"000000001000000",
+				"000000000000000",
+				"000000000000000",
+				"000001000000000",
+				"000000110000000",
+				"000000101100000",
+				"000000010000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000"},
+				
+			   {"000000000000000",
+				"000000000000000",
+				"000000001000000",
+				"000000001000000",
+				"000000111000000",
+				"000000001000000",
+				"000001000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000"}
+					
+			};
+			int state3[][]=new int[2][ROWS];
+			for(int i=0; i<2; i++){
+				for(int j=0; j<ROWS; j++){
+					state3[i][j]=Integer.parseInt(s3[i][j],2);
+				}
+			}
+			g.setGameState(state3);
+			g.setCurrSide(GameState.MIN_PLAYER);
 			System.out.println(g);
-//			System.out.println(g.evaluatePos(9, 5, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
-//			System.out.println(g.evaluatePos(5, 5, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
-			System.out.println(g.evaluatePos(10, 5, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
-//			System.out.println(g.nextPossibleMoves());
-		
+			System.out.println(g.evaluatePos(6, 7, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
+			//System.out.println(g.nextPossibleMoves());
+			
+			String s4[][] = {
+			   {"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000100000000",
+				"001000100000000",
+				"000010100000000",
+				"000001000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000010000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000"},
+				
+			   {"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000100000000000",
+				"000101000000000",
+				"000010000000000",
+				"000001000000000",
+				"000000100000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000",
+				"000000000000000"}
+					
+			};
+			int state4[][]=new int[2][ROWS];
+			for(int i=0; i<2; i++){
+				for(int j=0; j<ROWS; j++){
+					state4[i][j]=Integer.parseInt(s4[i][j],2);
+				}
+			}
+			g.setGameState(state4);
+			g.setCurrSide(GameState.MIN_PLAYER);
+			System.out.println(g);
+			System.out.println(g.evaluatePos(7, 6, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
 	}
 
 	@Test
@@ -457,7 +548,7 @@ public class TestGameState {
 		start = 0;
 		end = 6;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_3);
+			assertEquals(g.evaluatePattern(a,b,14-i),GameState.LIVE_3);
 		}
 		
 		a = Integer.parseInt("011010000000100",2);
@@ -465,7 +556,7 @@ public class TestGameState {
 		start = 0;
 		end = 6;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_3);
+			assertEquals(g.evaluatePattern(a,b,14-i),GameState.LIVE_3);
 		}
 		
 		a = Integer.parseInt("000110000000100",2);
@@ -497,7 +588,7 @@ public class TestGameState {
 		start = 3;
 		end = 5;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_2);
+			assertEquals(g.evaluatePattern(a,b,14-i),GameState.LIVE_2);
 		}
 		
 		a = Integer.parseInt("000110000000100",2);

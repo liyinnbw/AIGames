@@ -92,6 +92,15 @@ public class MainUI extends JPanel{
 			   }
 			}
 		}
+	  
+	   if(!gameState.getMoves().empty()){
+		   g2d.setColor(Color.RED);
+		   int d = (int) (UNIT*0.2);
+		   Point lastMove = gameState.getMoves().peek();
+		   Point ap = posAbsolute(lastMove);
+		   g2d.fillOval((int) ap.getX()-X_OFFSET-d/2, (int) ap.getY()-Y_OFFSET-d/2, d, d);
+	   }
+	   
    }
    
    public static void main(String[] args){
@@ -146,6 +155,18 @@ public class MainUI extends JPanel{
 	    	}
 	     }
 	  });
+	  
+	  mainFrame.addKeyListener(new KeyAdapter() {
+		  public void keyPressed(KeyEvent e) {
+			  if(e.getKeyCode()==KeyEvent.VK_BACK_SPACE){
+				  System.out.println("revert move");
+				  gameboard.gameState.revertOneMove();
+				  gameboard.gameState.revertOneMove();
+				  gameboard.repaint();
+			  }
+		  }
+	  });
+	  
 	  mainFrame.add(gameboard);
 	  mainFrame.setVisible(true); 
    }

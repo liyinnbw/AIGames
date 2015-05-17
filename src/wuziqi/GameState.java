@@ -26,9 +26,10 @@ public class GameState {
 	public static final int DEAD_3_LIVE_3 = 70;
 	public static final int DEAD_4 = 60;
 	public static final int LIVE_3 = 50;
-	public static final int DOUBLE_LIVE_2 = 40;
 	public static final int DOUBLE_DEAD_3 = 40;
+	public static final int DEAD_3_LIVE_2 = 40;
 	public static final int DEAD_3 = 30;
+	public static final int DOUBLE_LIVE_2 = 30;
 	public static final int LIVE_2 = 20;
 	public static final int DEAD_2 = 10;
 	public static final String REGEX_LIVE_4 = "011110";
@@ -47,7 +48,11 @@ public class GameState {
 	public static final String REGEX_DEAD_3_4 = "11100";
 	public static final String REGEX_DEAD_3_5 = "10101";
 	public static final String REGEX_DEAD_3_6 = "01110";
-	public static final String REGEX_LIVE_2 = "00011000";
+	public static final String REGEX_DEAD_3_7 = "10110";
+	public static final String REGEX_DEAD_3_8 = "01011";
+	public static final String REGEX_DEAD_3_9 = "01101";
+	public static final String REGEX_DEAD_3_10= "11010";
+	public static final String REGEX_LIVE_2   = "001100";
 	public static final String REGEX_DEAD_2_1 = "00011";
 	public static final String REGEX_DEAD_2_2 = "00110";
 	public static final String REGEX_DEAD_2_3 = "01100";
@@ -70,6 +75,10 @@ public class GameState {
 	public static final int	BIT_DEAD_3_4 = Integer.parseInt(REGEX_DEAD_3_4,2);
 	public static final int	BIT_DEAD_3_5 = Integer.parseInt(REGEX_DEAD_3_5,2);
 	public static final int	BIT_DEAD_3_6 = Integer.parseInt(REGEX_DEAD_3_6,2);
+	public static final int	BIT_DEAD_3_7 = Integer.parseInt(REGEX_DEAD_3_7,2);
+	public static final int	BIT_DEAD_3_8 = Integer.parseInt(REGEX_DEAD_3_8,2);
+	public static final int	BIT_DEAD_3_9 = Integer.parseInt(REGEX_DEAD_3_9,2);
+	public static final int	BIT_DEAD_3_10= Integer.parseInt(REGEX_DEAD_3_10,2);
 	public static final int	BIT_LIVE_2   = Integer.parseInt(REGEX_LIVE_2,2);
 	public static final int	BIT_DEAD_2_1 = Integer.parseInt(REGEX_DEAD_2_1,2);
 	public static final int	BIT_DEAD_2_2 = Integer.parseInt(REGEX_DEAD_2_2,2);
@@ -248,6 +257,7 @@ public class GameState {
 	public List<Point> checkMustMoves(List<Point> nexts){
 		List<Point> winMoves = new ArrayList<Point>();
 		List<Point> blockWinMoves = new ArrayList<Point>();
+		List<Point> threatMoves = new ArrayList<Point>();
 		List<Point> blockThreatMoves = new ArrayList<Point>();
 		
 		for(Point p: nexts){
@@ -259,12 +269,19 @@ public class GameState {
 				return winMoves;
 			}else if(valueOtherSide == DEAD_4 || valueOtherSide == LIVE_4){
 				blockWinMoves.add(p);
-			}else if(valueOtherSide >=LIVE_3){
+			}
+			else if(valueThisSide >DEAD_3){
+				threatMoves.add(p);
+			}else if(valueOtherSide >DEAD_3){
 				blockThreatMoves.add(p);
 			}
 		}
+		
 		if(blockWinMoves.size()>0){
 			return blockWinMoves;
+		}
+		if(threatMoves.size()>0){
+			return threatMoves;
 		}
 		if(blockThreatMoves.size()>0){
 			return blockThreatMoves;
@@ -594,7 +611,9 @@ public class GameState {
 		values[1] = value[side][r][c][2];
 		values[2] = value[side][r][c][3];
 		values[3] = value[side][r][c][4];
-		
+		//for(int i=0; i<values.length; i++){
+		//	System.out.println("direction "+i+": "+values[i]);
+		//}
 		int overall = evaluateValues(values);
 		
 		value[side][r][c][0]= overall+1;
@@ -690,11 +709,23 @@ public class GameState {
 			int dead3_6 = (BIT_DEAD_3_6 << pos) >> i;
 			result = checkRegion ^ dead3_6;
 			if(result==0) return DEAD_3;
+			int dead3_7 = (BIT_DEAD_3_7 << pos) >> i;
+			result = checkRegion ^ dead3_7;
+			if(result==0) return DEAD_3;
+			int dead3_8 = (BIT_DEAD_3_8 << pos) >> i;
+			result = checkRegion ^ dead3_8;
+			if(result==0) return DEAD_3;
+			int dead3_9 = (BIT_DEAD_3_9 << pos) >> i;
+			result = checkRegion ^ dead3_9;
+			if(result==0) return DEAD_3;
+			int dead3_10= (BIT_DEAD_3_10<< pos) >> i;
+			result = checkRegion ^ dead3_10;
+			if(result==0) return DEAD_3;
 		}
 		
-		for(int i=0; i<8; i++){
+		for(int i=0; i<6; i++){
 			if(i>pos) break;
-			int mask = (BIT_MASK_8 << pos) >> i;
+			int mask = (BIT_MASK_6 << pos) >> i;
 			int blocked = otherSidePattern & mask;
 			if (blocked!=0) continue;
 			int checkRegion = thisSidePattern & mask;
@@ -818,6 +849,9 @@ public class GameState {
 		}
 		if(countDead3>1){
 			return Math.max(max,DOUBLE_DEAD_3);
+		}
+		if(countLive2>0 && countDead3>0){
+			return Math.max(max,DEAD_3_LIVE_2);
 		}
 		if(countLive2>1){
 			return Math.max(max,DOUBLE_LIVE_2);

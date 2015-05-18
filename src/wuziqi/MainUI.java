@@ -121,8 +121,7 @@ public class MainUI extends JPanel{
 		        Point p = gameboard.posOnGrid(e.getPoint());
 		        if(gameboard.gameState.addPiece((int)p.getX(), (int)p.getY())){
 		        	System.out.println("mouse click "+p);
-			        gameboard.repaint();
-			        
+
 			        int over = gameboard.gameState.isGameOver();
 			        if(over!=-1){
 			        	String message;
@@ -133,7 +132,6 @@ public class MainUI extends JPanel{
 			        	if(input == JOptionPane.OK_OPTION)
 			        	{
 			        		gameboard.newGame();
-			        		gameboard.repaint();
 			        	}
 			        }else{
 			        	gameboard.agentMove();
@@ -147,10 +145,11 @@ public class MainUI extends JPanel{
 				        	if(input == JOptionPane.OK_OPTION)
 				        	{
 				        		gameboard.newGame();
-				        		gameboard.repaint();
+				        		
 				        	}
 				        }
 			        }
+			        gameboard.repaint();
 		        } 
 	    	}
 	     }
@@ -161,7 +160,9 @@ public class MainUI extends JPanel{
 			  if(e.getKeyCode()==KeyEvent.VK_BACK_SPACE){
 				  System.out.println("revert move");
 				  gameboard.gameState.revertOneMove();
-				  gameboard.gameState.revertOneMove();
+				  if(gameboard.gameState.getCurrSide()==GameState.MIN_PLAYER){
+					  gameboard.gameState.revertOneMove();
+				  }
 				  gameboard.repaint();
 			  }
 		  }

@@ -31,6 +31,9 @@ public class GameTree {
 	private ZobristHash hasher;
 	private static boolean ENABLE_HASH = true;
 	private static boolean ENABLE_MOVELIB = false;
+	
+	//debug flag
+	boolean debug;
 
 	public int getDepthLim() {
 		return depthLim;
@@ -86,6 +89,7 @@ public class GameTree {
 		if(ENABLE_MOVELIB){
 			setStateLibrary();
 		}
+		debug = false;
 	}
 	
 	public Point nextMove(){
@@ -232,6 +236,7 @@ public class GameTree {
 	}
 	public TreeNode minMaxAlphaBeta(GameState curr, int depth, int alpha, int beta){
 		
+		
 		//query hash table
 		if(ENABLE_HASH){	
 			TreeNode queryRoot = hm.get(hasher.hash(curr));
@@ -363,6 +368,7 @@ public class GameTree {
 			root.nextMove = selectedMove;
 			root.moveCount = curr.getMoves().size()+1;
 			root.v = min;
+			
 		}
 		if(ENABLE_HASH){
 			if(root.nextMove!=null){

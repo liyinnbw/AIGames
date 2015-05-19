@@ -129,7 +129,7 @@ public class TestGameState {
 	@Test
 	public void testCheckMustMoves(){
 		
-		System.out.println(g.evaluatePattern(Integer.parseInt("000000111000000",2),Integer.parseInt("000010000000000",2),9));
+		System.out.println(g.evaluatePattern(Integer.parseInt("000000111000000",2),Integer.parseInt("000010000000000",2),9,ROWS));
 		g.addPiece(6, 7);
 		g.addPiece(5, 6);
 		g.addPiece(7, 7);
@@ -410,7 +410,7 @@ public class TestGameState {
 			g.setCurrSide(GameState.MIN_PLAYER);
 			System.out.println(g);
 			System.out.println(g.evaluatePos(7, 6, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
-		*/	
+		
 			String s5[][] = {
 			   {"000000000000000",
 				"000000000000000",
@@ -457,6 +457,54 @@ public class TestGameState {
 			System.out.println(g.evaluatePos(7, 5, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
 			System.out.println(g.evaluatePos(7, 9, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
 			System.out.println(g.nextPossibleMoves());
+			*/	
+		
+		String s6[][] = {
+		   {"000000100000000",
+			"000100001000000",
+			"000011010000000",
+			"000000010100000",
+			"000010010000000",
+			"000001101000000",
+			"000100010000000",
+			"000000100100000",
+			"000010010000000",
+			"000000000000000",
+			"000000000000000",
+			"000000000000000",
+			"000000000000000",
+			"000000000000000",
+			"000000000000000"},
+			
+		   {"000001000000000",
+			"000011110000000",
+			"000100100000000",
+			"000001101000000",
+			"000001101100000",
+			"000010010000000",
+			"000000101000000",
+			"000001000000000",
+			"000000000000000",
+			"000000000000000",
+			"000000000000000",
+			"000000000000000",
+			"000000000000000",
+			"000000000000000",
+			"000000000000000"}
+				
+		};
+		int state6[][]=new int[2][ROWS];
+		for(int i=0; i<2; i++){
+			for(int j=0; j<ROWS; j++){
+				state6[i][j]=Integer.parseInt(s6[i][j],2);
+			}
+		}
+		g.setGameState(state6);
+		g.setCurrSide(GameState.MAX_PLAYER);
+		//System.out.println(g);
+		//System.out.println(g.evaluatePos(7, 5, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
+		System.out.println(g.evaluatePos(2, 3, GameState.MIN_PLAYER, GameState.ALL_DIRECTION));
+		//System.out.println(g.nextPossibleMoves());
 	
 	}
 
@@ -468,7 +516,7 @@ public class TestGameState {
 		int start = 1;
 		int end = 7;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.LIVE_4);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.LIVE_4);
 		}
 		
 		a = Integer.parseInt("011110000000100",2);
@@ -476,7 +524,7 @@ public class TestGameState {
 		start = 0;
 		end = 6;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.LIVE_4);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.LIVE_4);
 		}
 		
 		a = Integer.parseInt("000000000011110",2);
@@ -484,7 +532,7 @@ public class TestGameState {
 		start = 9;
 		end = 15;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.LIVE_4);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.LIVE_4);
 		}
 		
 		a = Integer.parseInt("000000000111100",2);
@@ -492,7 +540,7 @@ public class TestGameState {
 		start = 8;
 		end = 14;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.LIVE_4);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.LIVE_4);
 		}
 		
 		a = Integer.parseInt("001111000000100",2);
@@ -500,7 +548,7 @@ public class TestGameState {
 		start = 2;
 		end = 7;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_4);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.DEAD_4);
 		}
 		
 		a = Integer.parseInt("001110100000100",2);
@@ -508,7 +556,7 @@ public class TestGameState {
 		start = 2;
 		end = 7;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_4);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.DEAD_4);
 		}
 		
 		a = Integer.parseInt("001101100000100",2);
@@ -516,7 +564,7 @@ public class TestGameState {
 		start = 2;
 		end = 7;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_4);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.DEAD_4);
 		}
 		
 		a = Integer.parseInt("001011100000100",2);
@@ -524,7 +572,7 @@ public class TestGameState {
 		start = 2;
 		end = 7;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_4);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.DEAD_4);
 		}
 		
 		a = Integer.parseInt("001111000000100",2);
@@ -532,7 +580,7 @@ public class TestGameState {
 		start = 1;
 		end = 6;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_4);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.DEAD_4);
 		}
 		
 		a = Integer.parseInt("001110000000100",2);
@@ -540,7 +588,7 @@ public class TestGameState {
 		start = 1;
 		end = 6;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.LIVE_3);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.LIVE_3);
 		}
 		
 		a = Integer.parseInt("001110000000100",2);
@@ -548,7 +596,7 @@ public class TestGameState {
 		start = 1;
 		end = 6;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.LIVE_3);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.LIVE_3);
 		}
 		
 		a = Integer.parseInt("001110000000100",2);
@@ -556,7 +604,7 @@ public class TestGameState {
 		start = 2;
 		end = 6;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_3);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.DEAD_3);
 		}
 		
 		a = Integer.parseInt("001110000000100",2);
@@ -564,7 +612,7 @@ public class TestGameState {
 		start = 1;
 		end = 5;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_3);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.DEAD_3);
 		}
 		
 		a = Integer.parseInt("010011000000100",2);
@@ -572,7 +620,7 @@ public class TestGameState {
 		start = 1;
 		end = 6;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_3);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.DEAD_3);
 		}
 		
 		a = Integer.parseInt("011001000000100",2);
@@ -580,7 +628,7 @@ public class TestGameState {
 		start = 1;
 		end = 6;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_3);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.DEAD_3);
 		}
 		
 		a = Integer.parseInt("010101000000100",2);
@@ -588,7 +636,7 @@ public class TestGameState {
 		start = 1;
 		end = 6;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_3);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.DEAD_3);
 		}
 		
 		a = Integer.parseInt("010110000000100",2);
@@ -596,7 +644,7 @@ public class TestGameState {
 		start = 0;
 		end = 6;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.LIVE_3);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.LIVE_3);
 		}
 		
 		a = Integer.parseInt("011010000000100",2);
@@ -604,7 +652,7 @@ public class TestGameState {
 		start = 0;
 		end = 6;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.LIVE_3);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.LIVE_3);
 		}
 		
 		a = Integer.parseInt("000110000000100",2);
@@ -612,7 +660,7 @@ public class TestGameState {
 		start = 3;
 		end = 5;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.LIVE_2);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.LIVE_2);
 		}
 		
 		a = Integer.parseInt("000110000000100",2);
@@ -620,7 +668,7 @@ public class TestGameState {
 		start = 3;
 		end = 5;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_2);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.DEAD_2);
 		}
 		
 		a = Integer.parseInt("000110000000100",2);
@@ -628,7 +676,7 @@ public class TestGameState {
 		start = 3;
 		end = 5;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_2);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.DEAD_2);
 		}
 		
 		a = Integer.parseInt("000110000000100",2);
@@ -636,7 +684,7 @@ public class TestGameState {
 		start = 3;
 		end = 5;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.LIVE_2);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.LIVE_2);
 		}
 		
 		a = Integer.parseInt("000110000000100",2);
@@ -644,7 +692,7 @@ public class TestGameState {
 		start = 3;
 		end = 5;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_2);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.DEAD_2);
 		}
 		
 		a = Integer.parseInt("010010000000100",2);
@@ -652,7 +700,7 @@ public class TestGameState {
 		start = 1;
 		end = 5;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_2);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.DEAD_2);
 		}
 		
 		a = Integer.parseInt("001010000000100",2);
@@ -660,7 +708,7 @@ public class TestGameState {
 		start = 2;
 		end = 5;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),GameState.DEAD_2);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),GameState.DEAD_2);
 		}
 		
 		a = Integer.parseInt("001000000000100",2);
@@ -668,7 +716,7 @@ public class TestGameState {
 		start = 0;
 		end = 14;
 		for(int i= start; i<end; i++){
-			assertEquals(g.evaluatePattern(a,b,14-i),0);
+			assertEquals(g.evaluatePattern(a,b,14-i,ROWS),0);
 		}
 		
 	}

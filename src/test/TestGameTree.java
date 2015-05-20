@@ -87,7 +87,7 @@ public class TestGameTree {
 		System.out.println(g.evaluatePos(5, 7, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
 		System.out.println(g.nextPossibleMoves());
 		System.out.println(gt.nextMove());
-		*/
+		
 		String s6[][] = {
 		   {"000000100000000",
 			"000100001000000",
@@ -136,6 +136,63 @@ public class TestGameTree {
 		System.out.println(g.nextPossibleMoves());
 		Point next = gt.nextMove();
 		assertTrue(next.equals(new Point(5,8)));
+		*/
+		
+		
+		String s7[][] = {
+		   {"000000000000000",
+			"000000000000000",
+			"000000000000000",
+			"000010000000000",
+			"000000001000000",
+			"000000000000000",
+			"000000100001000",
+			"000000110000000",
+			"000000110100000",
+			"000000101000000",
+			"000000000000000",
+			"000000000000000",
+			"000000000000000",
+			"000000000000000",
+			"000000000000000"},
+			
+		   {"000000000000000",
+			"000000000000000",
+			"000000000000000",
+			"000000000000000",
+			"000001000000000",
+			"000000101000000",
+			"000000011110000",
+			"000000001000000",
+			"000000001000000",
+			"000000000000000",
+			"000000100000000",
+			"000000000000000",
+			"000000000000000",
+			"000000000000000",
+			"000000000000000"}
+				
+		};
+		int state7[][]=new int[2][ROWS];
+		for(int i=0; i<2; i++){
+			for(int j=0; j<ROWS; j++){
+				state7[i][j]=Integer.parseInt(s7[i][j],2);
+			}
+		}
+		g.setGameState(state7);
+		g.setCurrSide(GameState.MIN_PLAYER);
+		System.out.println(g);
+		//System.out.println(g.evaluatePos(7, 5, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
+		//System.out.println(g.evaluatePos(7, 9, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
+		System.out.println(g.nextPossibleMoves());
+		Point next = gt.nextMove();
+		System.out.println(next);
+		g.addPiece(10,7);
+		g.addPiece(5, 6);
+		next = gt.nextMove();
+		System.out.println(next);
+		//assertTrue(next.equals(new Point(5,8)));
+		
 	}
 	
 	/*

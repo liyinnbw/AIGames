@@ -63,9 +63,7 @@ public class MainUI extends JPanel{
 			}
 	   }
 	   
-//	   System.out.println(gameState);
-	   System.out.println("successful query saved states = "+agent.stateValueQuerySuccessfulCount+"/"+agent.stateValue.size()
-			   				+" Successful query saved nodes = "+agent.hmQuerySuccessfulCount+"/"+agent.hm.size());
+	   //System.out.println(gameState);
 
 	   int[][] states = gameState.getGameState();   
 	   int[] bitMaps = new int[GRID_COLS];

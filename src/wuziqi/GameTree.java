@@ -20,6 +20,7 @@ public class GameTree {
 		public Point nextMove;
 		public int moveCount;
 		public int v;
+		public int searchDepth;
 	}
 	private GameState currState;	//the current game state
 	private int depthLim;			//number of moves to look ahead
@@ -103,22 +104,35 @@ public class GameTree {
 		}
 		
 		//clean outdated hash
-		//int outdatedCount = 0;
-		//int currTotalMoveCount = currState.getMoves().size();
-		//Iterator<HashMap.Entry<Integer, TreeNode>> it = stateValue.entrySet().iterator();
-		//while(it.hasNext()){
-		//	HashMap.Entry<Integer, TreeNode> entry = it.next();
-		//	if(entry.getValue().moveCount<currTotalMoveCount){
-		//		it.remove();
-		//		outdatedCount++;
-		//	}
-		//}
-		//System.out.println("cleared outdated hash = "+outdatedCount+" current hash size = "+stateValue.size());
+		int outdatedCount = 0;
+		int currTotalMoveCount = currState.getMoves().size();
+		Iterator<HashMap.Entry<Integer, TreeNode>> it = hm.entrySet().iterator();
+		while(it.hasNext()){
+			HashMap.Entry<Integer, TreeNode> entry = it.next();
+			if(entry.getValue().moveCount<currTotalMoveCount){
+				it.remove();
+				outdatedCount++;
+			}
+		}
+		System.out.println("cleared outdated hash = "+outdatedCount+" current hash size = "+hm.size());
 		
-		hm = new HashMap<Integer, TreeNode>(); //old hash table useless since tree depth changed
+		//hm = new HashMap<Integer, TreeNode>(); //old hash table useless since tree depth changed
 		hmQuerySuccessfulCount = 0;
 		stateValueQuerySuccessfulCount = 0;
-		TreeNode bestNext = minMaxAlphaBeta(currState,1,-1*Integer.MAX_VALUE, Integer.MAX_VALUE);
+		TreeNode bestNext = minMaxAlphaBeta(currState,depthLim-1,-1*Integer.MAX_VALUE, Integer.MAX_VALUE);
+
+		
+		
+		//it = hm.entrySet().iterator();
+		//while(it.hasNext()){
+		//	HashMap.Entry<Integer, TreeNode> entry = it.next();
+		//	if(entry.getValue().moveCount==2 && entry.getValue().nextMove.equals(new Point(5,6))){
+		//		System.out.println("verified saved node value = "+entry.getValue().v);
+		//	}
+		//}
+		
+		
+		System.out.println("Successfully queried saved nodes = "+hmQuerySuccessfulCount+"/"+hm.size());
 		
 		return bestNext.nextMove;
 	}
@@ -240,7 +254,7 @@ public class GameTree {
 		//query hash table
 		if(ENABLE_HASH){	
 			TreeNode queryRoot = hm.get(hasher.hash(curr));
-			if(queryRoot!=null) {
+			if(queryRoot!=null && queryRoot.searchDepth>=depth) {
 				hmQuerySuccessfulCount++;
 				return queryRoot;
 			}
@@ -255,20 +269,12 @@ public class GameTree {
 		
 		TreeNode root = new TreeNode();	//the node to return
 		Point selectedMove = null;		//the state selected
+		int selectedSearchDepth = 0;
 		if(nextPossibleMoves.size()==0){
 			root.nextMove = null;
 			root.moveCount = curr.getMoves().size();
 			root.v=curr.evaluate();
-			
-			//int stateHash = hasher.hash(curr);
-			//TreeNode hashedNode = stateValue.get(stateHash);
-			//if(hashedNode!=null){
-			//	root.v = hashedNode.v;
-			//	stateValueQuerySuccessfulCount++;
-			//}else{
-			//	root.v=curr.evaluate();
-			//	stateValue.put(stateHash, root);
-			//}
+			root.searchDepth = Integer.MAX_VALUE;
 		}
 		else if(curr.getCurrSide() == GameState.MAX_PLAYER){
 			int max = 0;
@@ -276,36 +282,31 @@ public class GameTree {
 			for(Point p: nextPossibleMoves){
 				curr.addPiece((int)p.getX(), (int)p.getY());
 				int value = 0;
-				if(depth==depthLim){
-					value = curr.evaluate();
-					
-					//int stateHash = hasher.hash(curr);
-					//TreeNode hashedNode = stateValue.get(stateHash);
-					//if(hashedNode!=null){
-					//	value = hashedNode.v;
-					//	stateValueQuerySuccessfulCount++;
-					//}else{
-					//	value = curr.evaluate();
-					//	TreeNode tn = new TreeNode();
-					//	tn.nextMove = p;
-					//	tn.moveCount = curr.getMoves().size();
-					//	tn.v = value;
-					//	stateValue.put(stateHash, tn);
-					//}
-					
+				int searchDepth = depth;
+				if(depth==0){
+					value = curr.evaluate();		
 				}else{
-					TreeNode bestNext = minMaxAlphaBeta(curr, depth+1, alpha, beta);
+					if(depth == depthLim - 1 && p.equals(new Point(10,7))){
+						//debug = true;
+					}
+					TreeNode bestNext = minMaxAlphaBeta(curr, depth-1, alpha, beta);
+					if(depth == depthLim - 1 && p.equals(new Point(10,7))){
+						debug = false;
+					}
 					value = bestNext.v;
+					searchDepth = Math.max(searchDepth, bestNext.searchDepth);
 				}
 				curr.revertOneMove();
 				
 				if(maxNotInit){
 					max = value;
 					selectedMove = p; 
+					selectedSearchDepth = searchDepth;
 					maxNotInit = false;
 				}else if(value>max){
 					max = value;
 					selectedMove = p; 
+					selectedSearchDepth = searchDepth;
 				}
 				
 				if(max>=beta || max==GameState.MAX_STATE_VALUE){
@@ -319,6 +320,7 @@ public class GameTree {
 			root.nextMove = selectedMove;
 			root.moveCount = curr.getMoves().size()+1;
 			root.v = max;
+			root.searchDepth = selectedSearchDepth;
 		}
 		else{
 			int min = 0;
@@ -326,35 +328,31 @@ public class GameTree {
 			for(Point p: nextPossibleMoves){
 				curr.addPiece((int)p.getX(), (int)p.getY());
 				int value = 0;
-				
-				if(depth==depthLim){
+				int searchDepth = depth;
+				if(depth==0){
 					value = curr.evaluate();
-					//int stateHash = hasher.hash(curr);
-					//TreeNode hashedNode = stateValue.get(stateHash);
-					//if(hashedNode!=null){
-					//	value = hashedNode.v;
-					//	stateValueQuerySuccessfulCount++;
-					//}else{
-					//	value = curr.evaluate();
-					//	TreeNode tn = new TreeNode();
-					//	tn.nextMove = p;
-					//	tn.moveCount = curr.getMoves().size();
-					//	tn.v = value;
-					//	stateValue.put(stateHash, tn);
-					//}	
 				}else{
-					TreeNode bestNext = minMaxAlphaBeta(curr, depth+1, alpha, beta);
+					if(depth == depthLim - 1 && p.equals(new Point(10,7))){
+						//debug = true;
+					}
+					TreeNode bestNext = minMaxAlphaBeta(curr, depth-1, alpha, beta);
+					if(depth == depthLim - 1 && p.equals(new Point(10,7))){
+						debug = false;
+					}
 					value = bestNext.v;
+					searchDepth = Math.max(searchDepth, bestNext.searchDepth);
 				}
 				curr.revertOneMove();
 				
 				if(minNotInit){
 					min = value;
 					selectedMove = p; 
+					selectedSearchDepth = searchDepth;
 					minNotInit = false;
 				}else if(value<min){
 					min = value;
 					selectedMove = p; 
+					selectedSearchDepth = searchDepth;
 				}
 				
 				if(min<=alpha || min==GameState.MIN_STATE_VALUE){
@@ -368,16 +366,20 @@ public class GameTree {
 			root.nextMove = selectedMove;
 			root.moveCount = curr.getMoves().size()+1;
 			root.v = min;
+			root.searchDepth = selectedSearchDepth;
 			
 		}
 		if(ENABLE_HASH){
 			if(root.nextMove!=null){
-				curr.addPiece((int)root.nextMove.getX(), (int)root.nextMove.getY());
+				//curr.addPiece((int)root.nextMove.getX(), (int)root.nextMove.getY());
 				hm.put(hasher.hash(curr), root);
-				curr.revertOneMove();
+				//curr.revertOneMove();
 			}else{
 				hm.put(hasher.hash(curr), root);
 			}
+		}
+		if(debug == true){
+			System.out.println(root.nextMove+" value = "+root.v+" depth = "+root.searchDepth+" movecount = "+root.moveCount);
 		}
 		return root;
 	}

@@ -25,7 +25,7 @@ public class TestGameTree {
 
 	@Test
 	public void testNextMove(){
-		/*
+		
 		g.addPiece(7, 8);
 		g.addPiece(7, 7);
 		g.addPiece(6, 8);
@@ -134,9 +134,9 @@ public class TestGameTree {
 		//System.out.println(g.evaluatePos(7, 5, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
 		//System.out.println(g.evaluatePos(7, 9, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
 		System.out.println(g.nextPossibleMoves());
-		Point next = gt.nextMove();
+		next = gt.nextMove();
 		assertTrue(next.equals(new Point(5,8)));
-		*/
+		
 		
 		
 		String s7[][] = {
@@ -182,16 +182,14 @@ public class TestGameTree {
 		g.setGameState(state7);
 		g.setCurrSide(GameState.MIN_PLAYER);
 		System.out.println(g);
-		//System.out.println(g.evaluatePos(7, 5, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
-		//System.out.println(g.evaluatePos(7, 9, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
 		System.out.println(g.nextPossibleMoves());
-		Point next = gt.nextMove();
+		next = gt.nextMove();
 		System.out.println(next);
 		g.addPiece(10,7);
 		g.addPiece(5, 6);
 		next = gt.nextMove();
 		System.out.println(next);
-		//assertTrue(next.equals(new Point(5,8)));
+		assertTrue(next.equals(new Point(4,5)));
 		
 	}
 	

@@ -200,4 +200,9 @@ public class TestGameTree {
 		gt.reduceConsideration(gt.getCurrState().nextPossibleStates(),GameState.MIN_PLAYER);
 	}
 	*/
+	@Test
+	public void testMaxInteger(){
+		System.out.println(Integer.MAX_VALUE+" "+(0-Integer.MAX_VALUE));
+	}
+	
 }

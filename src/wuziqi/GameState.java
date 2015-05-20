@@ -214,6 +214,10 @@ public class GameState {
 		setCurrSide(1-currSide);
 		return true;
 	}
+	public boolean makeNullMove(){
+		setCurrSide(1-currSide);
+		return true;
+	}
 	public boolean revertOneMove(){
 		
 		if(moves.isEmpty()) return false;
@@ -226,8 +230,10 @@ public class GameState {
 		setCurrSide(1-currSide);
 		//updateValue(y,x,currSide);
 		return true;
-		
-		
+	}
+	public boolean revertNullMove(){
+		setCurrSide(1-currSide);
+		return true;
 	}
 	public int getBit(int[] s, int r, int c){
 		return s[r] & colMask[c];

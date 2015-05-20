@@ -32,7 +32,11 @@ public class GameTree {
 	private ZobristHash hasher;
 	private static boolean ENABLE_HASH = true;
 	private static boolean ENABLE_MOVELIB = false;
-	
+	private static final int NULLMOVE_R = 2;
+	private long startTime;
+	private long timeLim;
+	public int maxDepthReached;
+
 	//debug flag
 	boolean debug;
 
@@ -90,6 +94,8 @@ public class GameTree {
 		if(ENABLE_MOVELIB){
 			setStateLibrary();
 		}
+		timeLim = Long.MAX_VALUE;
+		maxDepthReached = 0;
 		debug = false;
 	}
 	
@@ -119,7 +125,17 @@ public class GameTree {
 		//hm = new HashMap<Integer, TreeNode>(); //old hash table useless since tree depth changed
 		hmQuerySuccessfulCount = 0;
 		stateValueQuerySuccessfulCount = 0;
-		TreeNode bestNext = minMaxAlphaBeta(currState,depthLim-1,-1*Integer.MAX_VALUE, Integer.MAX_VALUE);
+		maxDepthReached = 0;
+		
+		TreeNode bestNext = null;
+		timeLim = 30000; //30s
+		startTime = System.currentTimeMillis();
+		for(int depth = 1; ; depth++){
+			bestNext = minMaxAlphaBeta(currState,depth-1,0-Integer.MAX_VALUE, Integer.MAX_VALUE, false);
+			maxDepthReached = depth;
+			long currTime = System.currentTimeMillis();
+			if((currTime - startTime > timeLim) || bestNext.v==GameState.MAX_STATE_VALUE || bestNext.v==GameState.MIN_STATE_VALUE) break;
+		}
 
 		
 		
@@ -132,7 +148,7 @@ public class GameTree {
 		//}
 		
 		
-		System.out.println("Successfully queried saved nodes = "+hmQuerySuccessfulCount+"/"+hm.size());
+		System.out.println("Successfully queried saved nodes = "+hmQuerySuccessfulCount+"/"+hm.size()+" max depth reached = "+maxDepthReached);
 		
 		return bestNext.nextMove;
 	}
@@ -248,24 +264,34 @@ public class GameTree {
 		
 		return reduced;
 	}
-	public TreeNode minMaxAlphaBeta(GameState curr, int depth, int alpha, int beta){
+
+	public TreeNode minMaxAlphaBeta(GameState curr, int depth, int alpha, int beta, boolean useNullMove){
 		
-		
+		Point previousBest = null;
 		//query hash table
 		if(ENABLE_HASH){	
 			TreeNode queryRoot = hm.get(hasher.hash(curr));
-			if(queryRoot!=null && queryRoot.searchDepth>=depth) {
-				hmQuerySuccessfulCount++;
-				return queryRoot;
+			if(queryRoot!=null){
+				if(queryRoot.searchDepth>=depth) {
+					hmQuerySuccessfulCount++;
+					return queryRoot;
+				}else{
+					previousBest = queryRoot.nextMove;
+				}
 			}
 		}
 
 		List<Point> nextPossibleMoves = curr.nextPossibleMoves();
+		
+		//order search by resultant state value
 		nextPossibleMoves = sortMoves(curr, nextPossibleMoves, curr.getCurrSide());
-		//if(depth >= depthLim-2){
-		//	nextPossibleMoves = reduceConsideration(curr, nextPossibleMoves, curr.getCurrSide());
-		//}
-
+		
+		//if previous less deeper search result available, prioritize it as first search since it is likely still be the best
+		if(previousBest!=null){
+			if(nextPossibleMoves.remove(previousBest)){
+				nextPossibleMoves.add(0, previousBest);
+			}
+		}
 		
 		TreeNode root = new TreeNode();	//the node to return
 		Point selectedMove = null;		//the state selected
@@ -279,17 +305,39 @@ public class GameTree {
 		else if(curr.getCurrSide() == GameState.MAX_PLAYER){
 			int max = 0;
 			boolean maxNotInit = true;
+			
+			if(depth>0 && useNullMove){
+				//make null move
+				curr.makeNullMove();
+				TreeNode nullMoveBestNext = minMaxAlphaBeta(curr, depth-1-NULLMOVE_R, alpha, beta, false);
+				curr.revertNullMove();
+				
+				if(nullMoveBestNext.v>=beta || nullMoveBestNext.v==GameState.MAX_STATE_VALUE){
+					//System.out.println("null move pruning successful at depth = "+depth);
+					root.nextMove = null;
+					root.moveCount = curr.getMoves().size()+1;
+					root.v = nullMoveBestNext.v;
+					root.searchDepth = Math.max(depth, nullMoveBestNext.searchDepth);
+					if(ENABLE_HASH){
+						hm.put(hasher.hash(curr), root);
+					}
+					return root;
+				}
+			}
+			
+			
+			
 			for(Point p: nextPossibleMoves){
 				curr.addPiece((int)p.getX(), (int)p.getY());
 				int value = 0;
 				int searchDepth = depth;
-				if(depth==0){
+				if(depth<=0){
 					value = curr.evaluate();		
 				}else{
 					if(depth == depthLim - 1 && p.equals(new Point(10,7))){
 						//debug = true;
 					}
-					TreeNode bestNext = minMaxAlphaBeta(curr, depth-1, alpha, beta);
+					TreeNode bestNext = minMaxAlphaBeta(curr, depth-1, alpha, beta, false);
 					if(depth == depthLim - 1 && p.equals(new Point(10,7))){
 						debug = false;
 					}
@@ -316,26 +364,51 @@ public class GameTree {
 						alpha = max;
 					}
 				}
+				
+				long currTime = System.currentTimeMillis();
+				if(currTime - startTime > timeLim) break;
 			}
 			root.nextMove = selectedMove;
 			root.moveCount = curr.getMoves().size()+1;
 			root.v = max;
 			root.searchDepth = selectedSearchDepth;
+			
 		}
 		else{
 			int min = 0;
 			boolean minNotInit = true;
+			
+			if(depth>0 && useNullMove){
+				//make null move
+				curr.makeNullMove();
+				TreeNode nullMoveBestNext = minMaxAlphaBeta(curr, depth-1-NULLMOVE_R, alpha, beta, false);
+				curr.revertNullMove();
+				
+				if(nullMoveBestNext.v<=alpha || nullMoveBestNext.v==GameState.MIN_STATE_VALUE){
+					//System.out.println("null move pruning successful at depth = "+depth);
+					root.nextMove = null;
+					root.moveCount = curr.getMoves().size()+1;
+					root.v = nullMoveBestNext.v;
+					root.searchDepth = Math.max(depth, nullMoveBestNext.searchDepth);
+					if(ENABLE_HASH){
+						hm.put(hasher.hash(curr), root);
+					}
+					return root;
+				}
+			}
+			
+			
 			for(Point p: nextPossibleMoves){
 				curr.addPiece((int)p.getX(), (int)p.getY());
 				int value = 0;
 				int searchDepth = depth;
-				if(depth==0){
+				if(depth<=0){
 					value = curr.evaluate();
 				}else{
 					if(depth == depthLim - 1 && p.equals(new Point(10,7))){
 						//debug = true;
 					}
-					TreeNode bestNext = minMaxAlphaBeta(curr, depth-1, alpha, beta);
+					TreeNode bestNext = minMaxAlphaBeta(curr, depth-1, alpha, beta,false);
 					if(depth == depthLim - 1 && p.equals(new Point(10,7))){
 						debug = false;
 					}
@@ -362,6 +435,8 @@ public class GameTree {
 						beta = min;
 					}
 				}
+				long currTime = System.currentTimeMillis();
+				if(currTime - startTime > timeLim) break;
 			}
 			root.nextMove = selectedMove;
 			root.moveCount = curr.getMoves().size()+1;

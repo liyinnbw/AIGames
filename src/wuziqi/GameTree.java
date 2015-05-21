@@ -318,9 +318,9 @@ public class GameTree {
 					root.moveCount = curr.getMoves().size()+1;
 					root.v = nullMoveBestNext.v;
 					root.searchDepth = Math.max(depth, nullMoveBestNext.searchDepth);
-					if(ENABLE_HASH){
-						hm.put(hasher.hash(curr), root);
-					}
+					//if(ENABLE_HASH){
+					//	hm.put(hasher.hash(curr), root);
+					//}
 					return root;
 				}
 			}
@@ -337,7 +337,7 @@ public class GameTree {
 					if(depth == depthLim - 1 && p.equals(new Point(10,7))){
 						//debug = true;
 					}
-					TreeNode bestNext = minMaxAlphaBeta(curr, depth-1, alpha, beta, false);
+					TreeNode bestNext = minMaxAlphaBeta(curr, depth-1, alpha, beta, true);
 					if(depth == depthLim - 1 && p.equals(new Point(10,7))){
 						debug = false;
 					}
@@ -390,9 +390,9 @@ public class GameTree {
 					root.moveCount = curr.getMoves().size()+1;
 					root.v = nullMoveBestNext.v;
 					root.searchDepth = Math.max(depth, nullMoveBestNext.searchDepth);
-					if(ENABLE_HASH){
-						hm.put(hasher.hash(curr), root);
-					}
+					//if(ENABLE_HASH){
+					//	hm.put(hasher.hash(curr), root);
+					//}
 					return root;
 				}
 			}
@@ -408,7 +408,7 @@ public class GameTree {
 					if(depth == depthLim - 1 && p.equals(new Point(10,7))){
 						//debug = true;
 					}
-					TreeNode bestNext = minMaxAlphaBeta(curr, depth-1, alpha, beta,false);
+					TreeNode bestNext = minMaxAlphaBeta(curr, depth-1, alpha, beta, true);
 					if(depth == depthLim - 1 && p.equals(new Point(10,7))){
 						debug = false;
 					}

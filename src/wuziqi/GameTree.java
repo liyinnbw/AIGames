@@ -16,6 +16,7 @@ import java.util.Stack;
 
 public class GameTree {
 	public static final int BEST_SIZE = 10;
+	public static final long timeLim = 30000; //30s
 	private class TreeNode{
 		public Point nextMove;
 		public int moveCount;
@@ -34,7 +35,6 @@ public class GameTree {
 	private static boolean ENABLE_MOVELIB = false;
 	private static final int NULLMOVE_R = 2;
 	private long startTime;
-	private long timeLim;
 	public int maxDepthReached;
 
 	//debug flag
@@ -94,7 +94,6 @@ public class GameTree {
 		if(ENABLE_MOVELIB){
 			setStateLibrary();
 		}
-		timeLim = Long.MAX_VALUE;
 		maxDepthReached = 0;
 		debug = false;
 	}
@@ -128,10 +127,10 @@ public class GameTree {
 		maxDepthReached = 0;
 		
 		TreeNode bestNext = null;
-		timeLim = 30000; //30s
 		startTime = System.currentTimeMillis();
 		for(int depth = 1; ; depth++){
-			bestNext = minMaxAlphaBeta(currState,depth-1,0-Integer.MAX_VALUE, Integer.MAX_VALUE, false);
+			depthLim = depth;
+			bestNext = minMaxAlphaBeta(currState,depth-1,0-Integer.MAX_VALUE, Integer.MAX_VALUE, true);
 			maxDepthReached = depth;
 			long currTime = System.currentTimeMillis();
 			if((currTime - startTime > timeLim) || bestNext.v==GameState.MAX_STATE_VALUE || bestNext.v==GameState.MIN_STATE_VALUE) break;
@@ -306,7 +305,7 @@ public class GameTree {
 			int max = 0;
 			boolean maxNotInit = true;
 			
-			if(depth>0 && useNullMove){
+			if(depth > 0 && ((depthLim - depth==3) || (depthLim - depth==9)) && useNullMove){
 				//make null move
 				curr.makeNullMove();
 				TreeNode nullMoveBestNext = minMaxAlphaBeta(curr, depth-1-NULLMOVE_R, alpha, beta, false);
@@ -318,9 +317,9 @@ public class GameTree {
 					root.moveCount = curr.getMoves().size()+1;
 					root.v = nullMoveBestNext.v;
 					root.searchDepth = Math.max(depth, nullMoveBestNext.searchDepth);
-					//if(ENABLE_HASH){
-					//	hm.put(hasher.hash(curr), root);
-					//}
+					if(ENABLE_HASH){
+						hm.put(hasher.hash(curr), root);
+					}
 					return root;
 				}
 			}
@@ -378,7 +377,7 @@ public class GameTree {
 			int min = 0;
 			boolean minNotInit = true;
 			
-			if(depth>0 && useNullMove){
+			if(depth>0 && ( (depthLim - depth==3) || (depthLim - depth==9)) && useNullMove){
 				//make null move
 				curr.makeNullMove();
 				TreeNode nullMoveBestNext = minMaxAlphaBeta(curr, depth-1-NULLMOVE_R, alpha, beta, false);
@@ -390,9 +389,9 @@ public class GameTree {
 					root.moveCount = curr.getMoves().size()+1;
 					root.v = nullMoveBestNext.v;
 					root.searchDepth = Math.max(depth, nullMoveBestNext.searchDepth);
-					//if(ENABLE_HASH){
-					//	hm.put(hasher.hash(curr), root);
-					//}
+					if(ENABLE_HASH){
+						hm.put(hasher.hash(curr), root);
+					}
 					return root;
 				}
 			}
@@ -445,13 +444,7 @@ public class GameTree {
 			
 		}
 		if(ENABLE_HASH){
-			if(root.nextMove!=null){
-				//curr.addPiece((int)root.nextMove.getX(), (int)root.nextMove.getY());
-				hm.put(hasher.hash(curr), root);
-				//curr.revertOneMove();
-			}else{
-				hm.put(hasher.hash(curr), root);
-			}
+			hm.put(hasher.hash(curr), root);
 		}
 		if(debug == true){
 			System.out.println(root.nextMove+" value = "+root.v+" depth = "+root.searchDepth+" movecount = "+root.moveCount);

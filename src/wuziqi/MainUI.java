@@ -47,7 +47,7 @@ public class MainUI extends JPanel{
 	   long start = System.currentTimeMillis();
 	   Point nextBestMove = agent.nextMove();
 	   long end = System.currentTimeMillis();
-	   System.out.println("move calculation time = "+(end-start)/1000.0+" s");
+	   System.out.println("ai move = "+nextBestMove+" move calculation time = "+(end-start)/1000.0+" s");
 	   gameState.addPiece((int)nextBestMove.getX(), (int)nextBestMove.getY());
    }
    @Override

@@ -12,14 +12,14 @@ public class TestZobristHash {
 	public ZobristHash zh;
 	@Before
 	public void init() {
-		zh = new ZobristHash(144, 3);
+		zh = new ZobristHash(15,15, 3);
 	}
 
 	@Test
 	public void testHash(){
 		
-		GameState g = new GameState(12,12,0);
-		GameState g1 = new GameState(12,12,0);
+		GameState g = new GameState(15,15,0);
+		GameState g1 = new GameState(15,15,0);
 		//System.out.println(zh.hash(g));
 		//System.out.println(zh.hash(g1));
 		assertEquals(zh.hash(g),zh.hash(g1));

@@ -25,7 +25,7 @@ public class TestGameTree {
 
 	@Test
 	public void testNextMove(){
-		
+	/*	
 		g.addPiece(7, 8);
 		g.addPiece(7, 7);
 		g.addPiece(6, 8);
@@ -191,6 +191,110 @@ public class TestGameTree {
 		System.out.println(next);
 		assertTrue(next.equals(new Point(4,5)));
 		
+		
+		g = new GameState(ROWS,COLS,GameState.MAX_PLAYER);
+		g.addPiece(6, 7);
+		g.addPiece(6, 6);
+		g.addPiece(5, 8);
+		g.addPiece(7, 7);
+		g.addPiece(8, 8);
+		g.addPiece(5, 5);
+		g.addPiece(4, 4);
+		g.addPiece(8, 6);
+		g.addPiece(7, 5);
+		g.addPiece(7, 6);
+		g.addPiece(9, 6);
+		g.addPiece(4, 6);
+		g.addPiece(5, 6);
+		g.addPiece(6, 8);
+		g.addPiece(5, 9);
+		g.addPiece(5, 7);
+		g.addPiece(7, 9);
+		g.addPiece(3, 7);
+		g.addPiece(2, 8);
+		g.addPiece(3, 5);
+		g.addPiece(2, 4);
+		g.addPiece(4, 5);
+		g.addPiece(2, 5);
+		g.addPiece(3, 6);
+		g.addPiece(3, 8);
+		g.addPiece(2, 7);
+		g.addPiece(5, 4);
+		g.addPiece(3, 4);
+		g.addPiece(3, 3);
+		g.addPiece(2, 3);
+		g.addPiece(7, 4);
+		g.addPiece(4, 7);
+		g.addPiece(1, 7);
+		g.addPiece(9, 5);
+		g.addPiece(10, 4);
+		g.addPiece(7, 3);
+		g.addPiece(6, 4);
+		g.addPiece(8, 4);
+		g.addPiece(6, 2);
+		g.addPiece(4, 8);
+		g.addPiece(4, 9);
+		g.addPiece(3, 9);
+		g.addPiece(2, 10);
+		g.addPiece(10, 6);
+		g.addPiece(11, 7);
+		//g.addPiece(1, 5);
+		//g.addPiece(6, 3);
+		//g.addPiece(2, 6);
+		//g.addPiece(0, 4);
+		//g.addPiece(1, 2);
+		//g.addPiece(0, 1);
+		//g.addPiece(1, 6);
+		//g.addPiece(0, 6);
+		//g.addPiece(1, 4);
+		//g.addPiece(1, 3);
+		//g.addPiece(1, 8);
+		//g.addPiece(0, 9);
+		System.out.println(g);
+		System.out.println(g.getCurrSide());
+		System.out.println(g.nextPossibleMoves());
+		System.out.println(g.evaluatePos(3, 6, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
+		System.out.println(g.evaluatePos(1, 5, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
+		System.out.println(g.evaluatePos(8, 5, GameState.MAX_PLAYER, GameState.ALL_DIRECTION));
+		gt.setCurrState(g);
+		System.out.println(gt.nextMove());
+		*/
+		
+		g = new GameState(ROWS,COLS,GameState.MAX_PLAYER);
+		g.addPiece(9, 7);
+		g.addPiece(9, 6);
+		g.addPiece(8, 8);
+		g.addPiece(8, 9);
+		g.addPiece(7, 9);
+		g.addPiece(10, 6);
+		g.addPiece(6, 10);
+		g.addPiece(5, 11);
+		g.addPiece(7, 7);
+		g.addPiece(11, 6);
+		g.addPiece(12, 6);
+		g.addPiece(9, 8);
+		g.addPiece(10, 7);
+		g.addPiece(7, 6);
+		g.addPiece(8, 6);
+		g.addPiece(8, 7);
+		g.addPiece(6, 5);
+		//g.addPiece(1, 5);
+		//g.addPiece(6, 3);
+		//g.addPiece(2, 6);
+		//g.addPiece(0, 4);
+		//g.addPiece(1, 2);
+		//g.addPiece(0, 1);
+		//g.addPiece(1, 6);
+		//g.addPiece(0, 6);
+		//g.addPiece(1, 4);
+		//g.addPiece(1, 3);
+		//g.addPiece(1, 8);
+		//g.addPiece(0, 9);
+		System.out.println(g);
+		System.out.println(g.getCurrSide());
+		System.out.println(g.nextPossibleMoves());
+		gt.setCurrState(g);
+		System.out.println(gt.nextMove());
 	}
 	
 	/*

@@ -19,9 +19,9 @@ public class GameState {
 	public static final int D1_DIRECTION = 3;
 	public static final int D2_DIRECTION = 4;
 	public static final int ALL_DIRECTION = 5;
-	public static final int LIVE_4 = 90;
-	public static final int DOUBLE_DEAD_4 = 90;
-	public static final int DEAD_4_LIVE_3 = 90;
+	public static final int LIVE_4 = MAX_STATE_VALUE;//90;
+	public static final int DOUBLE_DEAD_4 = MAX_STATE_VALUE;//90;
+	public static final int DEAD_4_LIVE_3 = MAX_STATE_VALUE;//90;
 	public static final int DOUBLE_LIVE_3 = 80;
 	public static final int DEAD_3_LIVE_3 = 70;
 	public static final int DEAD_4 = 60;
@@ -32,14 +32,14 @@ public class GameState {
 	public static final int DOUBLE_LIVE_2 = 30;
 	public static final int LIVE_2 = 20;
 	public static final int DEAD_2 = 10;
-	public static final String REGEX_LIVE_4   = "011110";
+	public static final String REGEX_LIVE_4 = "011110";
 	public static final String REGEX_DEAD_4_1 = "11110";
 	public static final String REGEX_DEAD_4_2 = "11101";
 	public static final String REGEX_DEAD_4_3 = "11011";
 	public static final String REGEX_DEAD_4_4 = "10111";
 	public static final String REGEX_DEAD_4_5 = "01111";
-	public static final String REGEX_LIVE_3_1 = "011100";
-	public static final String REGEX_LIVE_3_2 = "001110";
+	//public static final String REGEX_LIVE_3_1 = "011100";
+	public static final String REGEX_LIVE_3_2 = "01110";
 	public static final String REGEX_LIVE_3_3 = "010110";
 	public static final String REGEX_LIVE_3_4 = "011010";
 	public static final String REGEX_DEAD_3_1 = "00111";
@@ -52,29 +52,22 @@ public class GameState {
 	public static final String REGEX_DEAD_3_8 = "01011";
 	public static final String REGEX_DEAD_3_9 = "01101";
 	public static final String REGEX_DEAD_3_10= "11010";
-	public static final String REGEX_LIVE_2_1 = "001100";
-	public static final String REGEX_LIVE_2_2 = "001010";
-	public static final String REGEX_LIVE_2_3 = "010100";
-	public static final String REGEX_LIVE_2_4 = "010010";
-	public static final String REGEX_LIVE_2_5 = "011000";
-	public static final String REGEX_LIVE_2_6 = "000110";
+	public static final String REGEX_LIVE_2   = "001100";
+//	public static final String REGEX_LIVE_2_2 = "001010";
+//	public static final String REGEX_LIVE_2_3 = "010100";
 	public static final String REGEX_DEAD_2_1 = "00011";
 	public static final String REGEX_DEAD_2_2 = "00110";
 	public static final String REGEX_DEAD_2_3 = "01100";
 	public static final String REGEX_DEAD_2_4 = "11000";
-	public static final String REGEX_DEAD_2_5 = "01001";
-	public static final String REGEX_DEAD_2_6 = "10010";
-	public static final String REGEX_DEAD_2_7 = "00101";
-	public static final String REGEX_DEAD_2_8 = "01010";
-	public static final String REGEX_DEAD_2_9 = "10100";
-	public static final String REGEX_DEAD_2_10= "10001";
+	public static final String REGEX_DEAD_2_5 = "010010";
+	public static final String REGEX_DEAD_2_6 = "0010100";
 	public static final int	BIT_LIVE_4   = Integer.parseInt(REGEX_LIVE_4,2);
 	public static final int BIT_DEAD_4_1 = Integer.parseInt(REGEX_DEAD_4_1,2); 
 	public static final int BIT_DEAD_4_2 = Integer.parseInt(REGEX_DEAD_4_2,2); 
 	public static final int BIT_DEAD_4_3 = Integer.parseInt(REGEX_DEAD_4_3,2); 
 	public static final int BIT_DEAD_4_4 = Integer.parseInt(REGEX_DEAD_4_4,2); 
 	public static final int BIT_DEAD_4_5 = Integer.parseInt(REGEX_DEAD_4_5,2);
-	public static final int	BIT_LIVE_3_1 = Integer.parseInt(REGEX_LIVE_3_1,2);
+	//public static final int	BIT_LIVE_3_1 = Integer.parseInt(REGEX_LIVE_3_1,2);
 	public static final int	BIT_LIVE_3_2 = Integer.parseInt(REGEX_LIVE_3_2,2);
 	public static final int	BIT_LIVE_3_3 = Integer.parseInt(REGEX_LIVE_3_3,2);
 	public static final int	BIT_LIVE_3_4 = Integer.parseInt(REGEX_LIVE_3_4,2);
@@ -88,22 +81,13 @@ public class GameState {
 	public static final int	BIT_DEAD_3_8 = Integer.parseInt(REGEX_DEAD_3_8,2);
 	public static final int	BIT_DEAD_3_9 = Integer.parseInt(REGEX_DEAD_3_9,2);
 	public static final int	BIT_DEAD_3_10= Integer.parseInt(REGEX_DEAD_3_10,2);
-	public static final int	BIT_LIVE_2_1 = Integer.parseInt(REGEX_LIVE_2_1,2);
-	public static final int	BIT_LIVE_2_2 = Integer.parseInt(REGEX_LIVE_2_2,2);
-	public static final int	BIT_LIVE_2_3 = Integer.parseInt(REGEX_LIVE_2_3,2);
-	public static final int	BIT_LIVE_2_4 = Integer.parseInt(REGEX_LIVE_2_4,2);
-	public static final int	BIT_LIVE_2_5 = Integer.parseInt(REGEX_LIVE_2_5,2);
-	public static final int	BIT_LIVE_2_6 = Integer.parseInt(REGEX_LIVE_2_6,2);
+	public static final int	BIT_LIVE_2   = Integer.parseInt(REGEX_LIVE_2,2);
 	public static final int	BIT_DEAD_2_1 = Integer.parseInt(REGEX_DEAD_2_1,2);
 	public static final int	BIT_DEAD_2_2 = Integer.parseInt(REGEX_DEAD_2_2,2);
 	public static final int	BIT_DEAD_2_3 = Integer.parseInt(REGEX_DEAD_2_3,2);
 	public static final int	BIT_DEAD_2_4 = Integer.parseInt(REGEX_DEAD_2_4,2);
 	public static final int	BIT_DEAD_2_5 = Integer.parseInt(REGEX_DEAD_2_5,2);
 	public static final int	BIT_DEAD_2_6 = Integer.parseInt(REGEX_DEAD_2_6,2);
-	public static final int	BIT_DEAD_2_7 = Integer.parseInt(REGEX_DEAD_2_7,2);
-	public static final int	BIT_DEAD_2_8 = Integer.parseInt(REGEX_DEAD_2_8,2);
-	public static final int	BIT_DEAD_2_9 = Integer.parseInt(REGEX_DEAD_2_9,2);
-	public static final int	BIT_DEAD_2_10= Integer.parseInt(REGEX_DEAD_2_10,2);
 	public static final int	BIT_MASK_8 = Integer.parseInt("11111111",2);
 	public static final int	BIT_MASK_7 = Integer.parseInt("1111111",2);
 	public static final int	BIT_MASK_6 = Integer.parseInt("111111",2);
@@ -374,10 +358,12 @@ public class GameState {
 				//only need to calculate for non-zero pos
 				if((state[MAX_PLAYER][i] & colMask[j])!=0){
 					int maxplayerValue=evaluatePos(i,j,MAX_PLAYER, ALL_DIRECTION);
+					if (maxplayerValue == MAX_STATE_VALUE) return MAX_STATE_VALUE;
 					maxplayerTotal+=(maxplayerValue+1);
 				}
 				else if((state[MIN_PLAYER][i] & colMask[j])!=0){
 					int minplayerValue=0-evaluatePos(i,j,MIN_PLAYER, ALL_DIRECTION);
+					if (minplayerValue == MIN_STATE_VALUE) return MIN_STATE_VALUE;
 					minplayerTotal+=(minplayerValue-1);
 				}
 				
@@ -536,6 +522,7 @@ public class GameState {
 			thisSideBits = state[side][r];
 			otherSideBits = state[1-side][r];
 			value[side][r][c][1] = evaluatePattern(thisSideBits, otherSideBits, COLS-1-c, COLS);
+			if (value[side][r][c][1] == MAX_STATE_VALUE) return MAX_STATE_VALUE;
 		}
 		
 		if(direction== V_DIRECTION  || direction == ALL_DIRECTION ){
@@ -556,6 +543,7 @@ public class GameState {
 				}
 			}
 			value[side][r][c][2] = evaluatePattern(thisSideBits, otherSideBits, ROWS-1-r, ROWS);
+			if (value[side][r][c][2] == MAX_STATE_VALUE) return MAX_STATE_VALUE;
 		}
 		
 		if(direction== D1_DIRECTION  || direction == ALL_DIRECTION ){
@@ -597,6 +585,7 @@ public class GameState {
 				len++;
 			}
 			value[side][r][c][3] = evaluatePattern(thisSideBits, otherSideBits, count, len);
+			if (value[side][r][c][3] == MAX_STATE_VALUE) return MAX_STATE_VALUE;
 		}
 		
 		if(direction== D2_DIRECTION  || direction == ALL_DIRECTION ){
@@ -638,6 +627,7 @@ public class GameState {
 				len++;
 			}
 			value[side][r][c][4] = evaluatePattern(thisSideBits, otherSideBits, count, len);
+			if (value[side][r][c][4] == MAX_STATE_VALUE) return MAX_STATE_VALUE;
 		}
 		
 		int values[] = new int[4];
@@ -693,7 +683,7 @@ public class GameState {
 			result = checkRegion ^ dead4_5;
 			if(result==0) return DEAD_4;
 		}
-		/*
+		
 		maskLen = 5;
 		for(int i=0; i<maskLen; i++){
 			if(i>pos) break;
@@ -707,7 +697,7 @@ public class GameState {
 			int result = checkRegion ^ live3_2;
 			if(result==0) return LIVE_3;
 		}
-		*/
+		
 		maskLen = 6;
 		for(int i=0; i<maskLen; i++){
 			if(i>pos) break;
@@ -717,14 +707,8 @@ public class GameState {
 			if (blocked!=0) continue;
 			int checkRegion = thisSidePattern & mask;
 			
-			int live3_1 = (BIT_LIVE_3_1 << pos) >> i;
-			int result = checkRegion ^ live3_1;
-			if(result==0) return LIVE_3;
-			int live3_2 = (BIT_LIVE_3_2 << pos) >> i;
-			result = checkRegion ^ live3_2;
-			if(result==0) return LIVE_3;
 			int live3_3 = (BIT_LIVE_3_3 << pos) >> i;
-			result = checkRegion ^ live3_3;
+			int result = checkRegion ^ live3_3;
 			if(result==0) return LIVE_3;
 			int live3_4 = (BIT_LIVE_3_4 << pos) >> i;
 			result = checkRegion ^ live3_4;
@@ -781,23 +765,8 @@ public class GameState {
 			if (blocked!=0) continue;
 			int checkRegion = thisSidePattern & mask;
 			
-			int live2_1 = (BIT_LIVE_2_1 << pos) >> i;
-			int result = checkRegion ^ live2_1;
-			if(result==0) return LIVE_2;
-			int live2_2 = (BIT_LIVE_2_2 << pos) >> i;
-			result = checkRegion ^ live2_2;
-			if(result==0) return LIVE_2;
-			int live2_3 = (BIT_LIVE_2_3 << pos) >> i;
-			result = checkRegion ^ live2_3;
-			if(result==0) return LIVE_2;
-			int live2_4 = (BIT_LIVE_2_4 << pos) >> i;
-			result = checkRegion ^ live2_4;
-			if(result==0) return LIVE_2;
-			int live2_5 = (BIT_LIVE_2_5 << pos) >> i;
-			result = checkRegion ^ live2_5;
-			if(result==0) return LIVE_2;
-			int live2_6 = (BIT_LIVE_2_6 << pos) >> i;
-			result = checkRegion ^ live2_6;
+			int live2 = (BIT_LIVE_2 << pos) >> i;
+			int result = checkRegion ^ live2;
 			if(result==0) return LIVE_2;
 		}
 		
@@ -822,23 +791,32 @@ public class GameState {
 			int dead2_4 = (BIT_DEAD_2_4 << pos) >> i;
 			result = checkRegion ^ dead2_4;
 			if(result==0) return DEAD_2;
+		}
+		
+		maskLen = 6;
+		for(int i=0; i<maskLen; i++){
+			if(i>pos) break;
+			if(pos-i+maskLen> len) continue;
+			int mask = (BIT_MASK_6 << pos) >> i;
+			int blocked = otherSidePattern & mask;
+			if (blocked!=0) continue;
+			int checkRegion = thisSidePattern & mask;
+			
 			int dead2_5 = (BIT_DEAD_2_5 << pos) >> i;
-			result = checkRegion ^ dead2_5;
+			int result = checkRegion ^ dead2_5;
 			if(result==0) return DEAD_2;
+		}
+		maskLen = 7;
+		for(int i=0; i<maskLen; i++){
+			if(i>pos) break;
+			if(pos-i+maskLen> len) continue;
+			int mask = (BIT_MASK_7 << pos) >> i;
+			int blocked = otherSidePattern & mask;
+			if (blocked!=0) continue;
+			int checkRegion = thisSidePattern & mask;
+			
 			int dead2_6 = (BIT_DEAD_2_6 << pos) >> i;
-			result = checkRegion ^ dead2_6;
-			if(result==0) return DEAD_2;
-			int dead2_7 = (BIT_DEAD_2_7 << pos) >> i;
-			result = checkRegion ^ dead2_7;
-			if(result==0) return DEAD_2;
-			int dead2_8 = (BIT_DEAD_2_8 << pos) >> i;
-			result = checkRegion ^ dead2_8;
-			if(result==0) return DEAD_2;
-			int dead2_9 = (BIT_DEAD_2_9 << pos) >> i;
-			result = checkRegion ^ dead2_9;
-			if(result==0) return DEAD_2;
-			int dead2_10 = (BIT_DEAD_2_10 << pos) >> i;
-			result = checkRegion ^ dead2_10;
+			int result = checkRegion ^ dead2_6;
 			if(result==0) return DEAD_2;
 		}
 		

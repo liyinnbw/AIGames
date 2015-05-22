@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Stack;
 
 public class GameTree {
-	public static final int BEST_SIZE = 10;
 	public static final long timeLim = 30000; //30s
 	private class TreeNode{
 		public Point nextMove;
@@ -26,17 +25,19 @@ public class GameTree {
 	private GameState currState;	//the current game state
 	private int depthLim;			//number of moves to look ahead
 	public HashMap<Integer, TreeNode> hm;
-	public int hmQuerySuccessfulCount;
-	public HashMap<Integer, TreeNode> stateValue;
-	public int stateValueQuerySuccessfulCount;
 	private HashMap<Integer, Point> moveLib;	//key: currstate hash value, value: next state
 	private ZobristHash hasher;
 	private static boolean ENABLE_HASH = true;
 	private static boolean ENABLE_MOVELIB = false;
-	private static final int NULLMOVE_R = 2;
+	private static final int NULLMOVE_R = 2;	//must be multiples of 2
 	private long startTime;
+	
+	//stats for print
+	public int hmQuerySuccessfulCount;
 	public int maxDepthReached;
-
+	public int nodesVisitedCount;
+	public int branchesCount;
+	public long totalSortingTime;
 	//debug flag
 	boolean debug;
 
@@ -86,15 +87,17 @@ public class GameTree {
 		System.out.println("agent created");
 		setCurrState(curr);
 		setDepthLim(dpLim);
-		hasher = new ZobristHash(curr.getRows()*curr.getCols(),3);
-		stateValue = new HashMap<Integer, TreeNode>();
+		hasher = new ZobristHash(curr.getRows(), curr.getCols(),3);
 		hm = new HashMap<Integer, TreeNode>();
 		hmQuerySuccessfulCount = 0;
-		stateValueQuerySuccessfulCount = 0;
+
 		if(ENABLE_MOVELIB){
 			setStateLibrary();
 		}
 		maxDepthReached = 0;
+		nodesVisitedCount = 0;
+		branchesCount = 0;
+		totalSortingTime = 0;
 		debug = false;
 	}
 	
@@ -123,12 +126,14 @@ public class GameTree {
 		
 		//hm = new HashMap<Integer, TreeNode>(); //old hash table useless since tree depth changed
 		hmQuerySuccessfulCount = 0;
-		stateValueQuerySuccessfulCount = 0;
 		maxDepthReached = 0;
+		nodesVisitedCount = 0;
+		branchesCount = 0;
+		totalSortingTime = 0;
 		
 		TreeNode bestNext = null;
 		startTime = System.currentTimeMillis();
-		for(int depth = 1; ; depth++){
+		for(int depth = 4; ; depth++){
 			depthLim = depth;
 			bestNext = minMaxAlphaBeta(currState,depth-1,0-Integer.MAX_VALUE, Integer.MAX_VALUE, true);
 			maxDepthReached = depth;
@@ -147,8 +152,8 @@ public class GameTree {
 		//}
 		
 		
-		System.out.println("Successfully queried saved nodes = "+hmQuerySuccessfulCount+"/"+hm.size()+" max depth reached = "+maxDepthReached);
-		
+		System.out.println("Reuse saved nodes = "+hmQuerySuccessfulCount+"/"+hm.size()+" max depth reached = "+maxDepthReached+" average branching = "+branchesCount/nodesVisitedCount);
+		System.out.println("sorting time = "+totalSortingTime/1000.0+" s");
 		return bestNext.nextMove;
 	}
 	public List<Point> sortMoves(GameState curr, List<Point> nextPossibleMoves, int side){
@@ -192,86 +197,16 @@ public class GameTree {
 		}
 		return sortedMoves;
 	}
-	public List<Point> reduceConsideration (GameState curr, List<Point> nextPossibleMoves, int side){
-		if(nextPossibleMoves.size()<BEST_SIZE) return nextPossibleMoves;
-		
-		List<TreeNode> sortable = new ArrayList<TreeNode>();
-		
-		//evaluate all moves
-		for(Point p : nextPossibleMoves){
-			curr.addPiece((int)p.getX(), (int)p.getY());
-			TreeNode t = new TreeNode();
-			t.nextMove = p;
-			t.v = curr.evaluate();
-			curr.revertOneMove();
-			/*
-			int stateHash = hasher.hash(s);
-			TreeNode hashedNode = stateValue.get(stateHash);
-			if(hashedNode!=null){
-				t.v=hashedNode.v;
-			}else{
-				t.v=s.evaluate();
-				stateValue.put(stateHash, t);
-			}*/
-			sortable.add(t);
-		}
-		
-		//sort moves by value
-		if(side == GameState.MAX_PLAYER){
-			Collections.sort(sortable,new Comparator<TreeNode>(){
-				@Override
-				public int compare(TreeNode arg0, TreeNode arg1) {	
-					if(arg0.v<arg1.v) return 1;
-					if(arg0.v==arg1.v) return 0;
-					else return -1;
-					
-				}		
-			});
-		}else{
-			Collections.sort(sortable,new Comparator<TreeNode>(){
-				@Override
-				public int compare(TreeNode arg0, TreeNode arg1) {	
-					if(arg0.v<arg1.v) return -1;
-					if(arg0.v==arg1.v) return 0;
-					else return 1;
-				}		
-			});
-		}
-		
-		//for(TreeNode t: sortable){
-		//	System.out.print(t.v+" ");
-		//}
-		//System.out.println();
-		
-		int reducedSize = 0;
-		for(int i=0; i<sortable.size(); i++){
-			if(i>=BEST_SIZE && (sortable.get(BEST_SIZE-1).v!=sortable.get(i).v)){
-				break;
-			}
-			reducedSize++;
-		}
-		
-		List<Point> reduced = new ArrayList<Point>();
-		for(int i=0; i<reducedSize; i++){
-			reduced.add(sortable.get(i).nextMove);
-		}
-		
-		//for(int i=0; i<reduced.size(); i++){
-		//	System.out.print(sortable.get(i).v+" ");
-		//}
-		//System.out.println();
-		
-		return reduced;
-	}
 
 	public TreeNode minMaxAlphaBeta(GameState curr, int depth, int alpha, int beta, boolean useNullMove){
+		nodesVisitedCount++;
 		
 		Point previousBest = null;
 		//query hash table
 		if(ENABLE_HASH){	
 			TreeNode queryRoot = hm.get(hasher.hash(curr));
 			if(queryRoot!=null){
-				if(queryRoot.searchDepth>=depth) {
+				if(queryRoot.searchDepth>=depth && !(depthLim-depth == 1 && queryRoot.nextMove==null)) {
 					hmQuerySuccessfulCount++;
 					return queryRoot;
 				}else{
@@ -282,8 +217,11 @@ public class GameTree {
 
 		List<Point> nextPossibleMoves = curr.nextPossibleMoves();
 		
+		long start = System.currentTimeMillis();
 		//order search by resultant state value
 		nextPossibleMoves = sortMoves(curr, nextPossibleMoves, curr.getCurrSide());
+		long end = System.currentTimeMillis();
+		totalSortingTime += end-start;
 		
 		//if previous less deeper search result available, prioritize it as first search since it is likely still be the best
 		if(previousBest!=null){
@@ -305,10 +243,10 @@ public class GameTree {
 			int max = 0;
 			boolean maxNotInit = true;
 			
-			if(depth > 0 && ((depthLim - depth==3) || (depthLim - depth==9)) && useNullMove){
+			if(depth > 0 && (depthLim - depth>=3) && useNullMove){
 				//make null move
 				curr.makeNullMove();
-				TreeNode nullMoveBestNext = minMaxAlphaBeta(curr, depth-1-NULLMOVE_R, alpha, beta, false);
+				TreeNode nullMoveBestNext = minMaxAlphaBeta(curr, depth-1-NULLMOVE_R, alpha, beta, !useNullMove);
 				curr.revertNullMove();
 				
 				if(nullMoveBestNext.v>=beta || nullMoveBestNext.v==GameState.MAX_STATE_VALUE){
@@ -320,6 +258,7 @@ public class GameTree {
 					if(ENABLE_HASH){
 						hm.put(hasher.hash(curr), root);
 					}
+					branchesCount++;
 					return root;
 				}
 			}
@@ -327,19 +266,22 @@ public class GameTree {
 			
 			
 			for(Point p: nextPossibleMoves){
+				branchesCount++;
+				
 				curr.addPiece((int)p.getX(), (int)p.getY());
 				int value = 0;
 				int searchDepth = depth;
 				if(depth<=0){
 					value = curr.evaluate();		
 				}else{
-					if(depth == depthLim - 1 && p.equals(new Point(10,7))){
+					//if(depth == depthLim - 1 && p.equals(new Point(1,5))){
 						//debug = true;
-					}
-					TreeNode bestNext = minMaxAlphaBeta(curr, depth-1, alpha, beta, true);
-					if(depth == depthLim - 1 && p.equals(new Point(10,7))){
-						debug = false;
-					}
+					//}
+					TreeNode bestNext = minMaxAlphaBeta(curr, depth-1, alpha, beta, !useNullMove);
+					//if(depth == depthLim - 1 &&( p.equals(new Point(1,5)) || p.equals(new Point(8,5)) || p.equals(new Point(6,3))) ){
+						//System.out.println(p+" value = "+bestNext.v+ " depth = "+depth);
+					//	debug = false;
+					//}
 					value = bestNext.v;
 					searchDepth = Math.max(searchDepth, bestNext.searchDepth);
 				}
@@ -377,10 +319,11 @@ public class GameTree {
 			int min = 0;
 			boolean minNotInit = true;
 			
-			if(depth>0 && ( (depthLim - depth==3) || (depthLim - depth==9)) && useNullMove){
+			
+			if(depth>0 && (depthLim - depth>=3) && useNullMove){
 				//make null move
 				curr.makeNullMove();
-				TreeNode nullMoveBestNext = minMaxAlphaBeta(curr, depth-1-NULLMOVE_R, alpha, beta, false);
+				TreeNode nullMoveBestNext = minMaxAlphaBeta(curr, depth-1-NULLMOVE_R, alpha, beta, !useNullMove);
 				curr.revertNullMove();
 				
 				if(nullMoveBestNext.v<=alpha || nullMoveBestNext.v==GameState.MIN_STATE_VALUE){
@@ -392,25 +335,29 @@ public class GameTree {
 					if(ENABLE_HASH){
 						hm.put(hasher.hash(curr), root);
 					}
+					branchesCount++;
 					return root;
 				}
 			}
 			
 			
 			for(Point p: nextPossibleMoves){
+				branchesCount++;
+				
 				curr.addPiece((int)p.getX(), (int)p.getY());
 				int value = 0;
 				int searchDepth = depth;
 				if(depth<=0){
 					value = curr.evaluate();
 				}else{
-					if(depth == depthLim - 1 && p.equals(new Point(10,7))){
+					//if(depth == depthLim - 1 && p.equals(new Point(1,5))){
 						//debug = true;
-					}
-					TreeNode bestNext = minMaxAlphaBeta(curr, depth-1, alpha, beta, true);
-					if(depth == depthLim - 1 && p.equals(new Point(10,7))){
-						debug = false;
-					}
+					//}
+					TreeNode bestNext = minMaxAlphaBeta(curr, depth-1, alpha, beta, !useNullMove);
+					//if(depth == depthLim - 1 &&( p.equals(new Point(1,5)) || p.equals(new Point(8,5)) || p.equals(new Point(6,3))) ){
+						//System.out.println(p+" value = "+bestNext.v+ " depth = "+depth);
+					//	debug = false;
+					//}
 					value = bestNext.v;
 					searchDepth = Math.max(searchDepth, bestNext.searchDepth);
 				}
@@ -449,6 +396,9 @@ public class GameTree {
 		if(debug == true){
 			System.out.println(root.nextMove+" value = "+root.v+" depth = "+root.searchDepth+" movecount = "+root.moveCount);
 		}
+		//if(depth == depthLim -1){
+		//	System.out.println(root.nextMove+" value = "+root.v+" depth = "+root.searchDepth+" movecount = "+root.moveCount);
+		//}
 		return root;
 	}
 }

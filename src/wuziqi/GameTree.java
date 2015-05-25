@@ -13,15 +13,34 @@ import java.util.List;
 import java.util.Map;
 
 public class GameTree {
-	public static final long timeLim = 30000; //30s
+	
+	public static class MaxComparator implements Comparator<TreeNode>{
+		@Override
+		public int compare(TreeNode o1, TreeNode o2) {
+			if(o1.v<o2.v) return 1;
+			if(o1.v==o2.v) return 0;
+			else return -1;
+		}
+	}
+	public static class MinComparator implements Comparator<TreeNode>{
+		@Override
+		public int compare(TreeNode o1, TreeNode o2) {
+			if(o1.v<o2.v) return -1;
+			if(o1.v==o2.v) return 0;
+			else return 1;
+		}
+	}
 	private class TreeNode{
 		public Point nextMove;
 		public int moveCount;
 		public int v;
 		public int searchDepth;
 	}
+	private final static MaxComparator maxComparator = new MaxComparator();
+	private final static MinComparator minComparator = new MinComparator();
 	private GameState currState;	//the current game state
 	private int depthLim;			//number of moves to look ahead
+	private long timeLim;
 	public HashMap<Integer, TreeNode> hm;
 	private HashMap<Integer, Point> moveLib;	//key: currstate hash value, value: next state
 	private ZobristHash hasher;
@@ -29,6 +48,7 @@ public class GameTree {
 	private static boolean ENABLE_MOVELIB = false;
 	private static final int NULLMOVE_R = 2;	//must be multiples of 2
 	private long startTime;
+	private boolean endSearch;
 	
 	//stats for print
 	public int hmQuerySuccessfulCount;
@@ -39,12 +59,12 @@ public class GameTree {
 	//debug flag
 	boolean debug;
 
-	public int getDepthLim() {
-		return depthLim;
+	public long getTimeLim() {
+		return timeLim;
 	}
 
-	public void setDepthLim(int depthLim) {
-		this.depthLim = depthLim;
+	public void setTimeLim(int t) {
+		timeLim = (long)t;
 	}
 
 	public GameState getCurrState() {
@@ -83,21 +103,15 @@ public class GameTree {
 		}
 	}
 	
-	public GameTree(GameState curr, int dpLim){
+	public GameTree(GameState curr, int tLim){
 		System.out.println("agent created");
 		setCurrState(curr);
-		setDepthLim(dpLim);
+		setTimeLim(tLim);
 		hasher = new ZobristHash(curr.getRows(), curr.getCols(),3);
 		hm = new HashMap<Integer, TreeNode>();
-		hmQuerySuccessfulCount = 0;
-
 		if(ENABLE_MOVELIB){
 			setStateLibrary();
 		}
-		maxDepthReached = 0;
-		nodesVisitedCount = 0;
-		branchesCount = 0;
-		totalSortingTime = 0;
 		debug = false;
 	}
 	
@@ -125,12 +139,13 @@ public class GameTree {
 		}
 		System.out.println("cleared outdated hash = "+outdatedCount+" current hash size = "+hm.size());
 		
-		//hm = new HashMap<Integer, TreeNode>(); //old hash table useless since tree depth changed
+
 		hmQuerySuccessfulCount = 0;
 		maxDepthReached = 0;
 		nodesVisitedCount = 0;
 		branchesCount = 0;
 		totalSortingTime = 0;
+		endSearch = false;
 		
 		TreeNode bestNext = null;
 		startTime = System.currentTimeMillis();
@@ -139,7 +154,7 @@ public class GameTree {
 			bestNext = minMaxAlphaBeta(currState,depth-1,0-Integer.MAX_VALUE, Integer.MAX_VALUE, true);
 			maxDepthReached = depth;
 			long currTime = System.currentTimeMillis();
-			if((currTime - startTime > timeLim) || bestNext.v==GameState.MAX_STATE_VALUE || bestNext.v==GameState.MIN_STATE_VALUE) break;
+			if((currTime - startTime > timeLim) || bestNext.v==GameState.MAX_STATE_VALUE || bestNext.v==GameState.MIN_STATE_VALUE || endSearch) break;
 		}
 
 		
@@ -175,6 +190,13 @@ public class GameTree {
 		
 		//sort moves by value
 		if(side == GameState.MAX_PLAYER){
+			Collections.sort(sortable,maxComparator);
+		}else{
+			Collections.sort(sortable,minComparator);
+		}
+		
+		/*
+		if(side == GameState.MAX_PLAYER){
 			Collections.sort(sortable,new Comparator<TreeNode>(){
 				@Override
 				public int compare(TreeNode arg0, TreeNode arg1) {	
@@ -194,7 +216,7 @@ public class GameTree {
 				}		
 			});
 		}
-
+		*/
 		List<Point> sortedMoves = new ArrayList<Point>();
 		for(int i=0; i<sortable.size(); i++){
 			sortedMoves.add(sortable.get(i).nextMove);
@@ -242,6 +264,11 @@ public class GameTree {
 			root.moveCount = curr.getMoves().size();
 			root.v=curr.evaluate();
 			root.searchDepth = Integer.MAX_VALUE;
+		}
+		else if(nextPossibleMoves.size()==1 && (depthLim-depth)==1){
+			root.nextMove = nextPossibleMoves.get(0);
+			endSearch = true;
+			return root;
 		}
 		else if(curr.getCurrSide() == GameState.MAX_PLAYER){
 			int max = 0;

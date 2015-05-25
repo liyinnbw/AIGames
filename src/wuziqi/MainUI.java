@@ -17,7 +17,7 @@ public class MainUI extends JPanel{
    public int GRID_COLS;	//vertices, not squares
    public int X_OFFSET;
    public int Y_OFFSET;
-   public int SEARCH_DEPTH;
+   public int SEARCH_TIME;	//in miliseconds
    public GameState gameState;
    public GameTree agent;
    public MainUI(){
@@ -28,12 +28,12 @@ public class MainUI extends JPanel{
 	   UNIT = 60;
 	   GRID_ROWS = 15;	//vertices, not squares
 	   GRID_COLS = 15;	//vertices, not squares
-	   SEARCH_DEPTH = 8;
+	   SEARCH_TIME = 3000;
 	   newGame();
    }
    private void newGame(){
 	   gameState = new GameState(GRID_ROWS,GRID_COLS,GameState.MAX_PLAYER);
-	   agent = new GameTree(gameState, SEARCH_DEPTH);
+	   agent = new GameTree(gameState, SEARCH_TIME);
    }
    private Point posOnGrid(Point p){
 	   Point pos = new Point((int)((p.getX()-XO+UNIT/2.0)/UNIT),(int)((p.getY()-YO+UNIT/2.0)/UNIT));

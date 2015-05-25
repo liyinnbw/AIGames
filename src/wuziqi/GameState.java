@@ -244,8 +244,9 @@ public class GameState {
 		int newPieceExpandedMap[] = new int[ROWS];
 		for(int i=0; i<ROWS; i++){
 			for(int j=0; j<COLS; j++){
-				if(Math.abs(i-r)<2 && Math.abs(j-c)<2)
+				if(((i-r)<2 && (i-r)>-2) && ((j-c)<2 && (j-c)>-2)){
 					newPieceExpandedMap[i] |= colMask[j];
+				}
 			}
 		}
 		//StringBuilder sb = new StringBuilder();
@@ -378,9 +379,19 @@ public class GameState {
 	}
 	
 	//TODO: except for the pos newly added, the rest only need to update 1 direction and reevaluate pattern.
-	public int updateValue(int r, int c, int side){
+	public int updateValue(int r, int c){
+		int maxplayerTotal = 0;
+		int minplayerTotal = 0;
 		
 		//evaluate the newly changed pos
+		
+		if((state[MAX_PLAYER][r] & colMask[c])!=0){
+			maxplayerTotal += evaluatePos(r,c,MAX_PLAYER, ALL_DIRECTION);
+		}else if((state[MIN_PLAYER][r] & colMask[c])!=0){
+			minplayerTotal -= evaluatePos(r,c,MIN_PLAYER, ALL_DIRECTION);
+		}
+		//TODO: may need to reset values to zero
+		/*
 		if((state[side][r] & colMask[c])==0){
 			for(int i=0; i<5; i++){
 				value[side][r][c][i]=0;
@@ -388,15 +399,16 @@ public class GameState {
 		}else{
 			int newPosValue = evaluatePos(r,c,side, ALL_DIRECTION);
 		}
+		*/
 		
 		//update horizontally affected pos
 		for(int i=0; i<COLS; i++){
 			if(i!=c){
 				if((state[MAX_PLAYER][r] & colMask[i])!=0){
-					evaluatePos(r,i, MAX_PLAYER, H_DIRECTION);
+					maxplayerTotal +=evaluatePos(r,i, MAX_PLAYER, H_DIRECTION);
 				}
 				else if((state[MIN_PLAYER][r] & colMask[i])!=0){
-					evaluatePos(r,i, MIN_PLAYER, H_DIRECTION);
+					minplayerTotal -=evaluatePos(r,i, MIN_PLAYER, H_DIRECTION);
 				}
 				
 			}
@@ -406,10 +418,10 @@ public class GameState {
 		for(int i=0; i<ROWS; i++){
 			if(i!=r){
 				if((state[MAX_PLAYER][i] & colMask[c])!=0){
-					evaluatePos(i,c, MAX_PLAYER, V_DIRECTION);
+					maxplayerTotal +=evaluatePos(i,c, MAX_PLAYER, V_DIRECTION);
 				}
 				else if((state[MIN_PLAYER][i] & colMask[c])!=0){
-					evaluatePos(i,c, MIN_PLAYER, V_DIRECTION);
+					minplayerTotal -=evaluatePos(i,c, MIN_PLAYER, V_DIRECTION);
 				}
 			}	
 		}
@@ -422,10 +434,10 @@ public class GameState {
 			int row = r-i;
 			int col = c-i;
 			if((state[MAX_PLAYER][row] & colMask[col])!=0){
-				evaluatePos(row,col, MAX_PLAYER, D1_DIRECTION );
+				maxplayerTotal +=evaluatePos(row,col, MAX_PLAYER, D1_DIRECTION );
 			}
 			else if((state[MIN_PLAYER][row] & colMask[col])!=0){
-				evaluatePos(row,col, MIN_PLAYER, D1_DIRECTION );
+				minplayerTotal -=evaluatePos(row,col, MIN_PLAYER, D1_DIRECTION );
 			}
 		}
 		for(int i=1; i<ROWS; i++){
@@ -435,10 +447,10 @@ public class GameState {
 			int row = r+i;
 			int col = c+i;
 			if((state[MAX_PLAYER][row] & colMask[col])!=0){
-				evaluatePos(row,col, MAX_PLAYER, D1_DIRECTION );
+				maxplayerTotal +=evaluatePos(row,col, MAX_PLAYER, D1_DIRECTION );
 			}
 			else if((state[MIN_PLAYER][row] & colMask[col])!=0){
-				evaluatePos(row,col, MIN_PLAYER, D1_DIRECTION );
+				minplayerTotal -=evaluatePos(row,col, MIN_PLAYER, D1_DIRECTION );
 			}
 		}
 		
@@ -450,10 +462,10 @@ public class GameState {
 			int row = r-i;
 			int col = c+i;
 			if((state[MAX_PLAYER][row] & colMask[col])!=0){
-				evaluatePos(row,col, MAX_PLAYER, D2_DIRECTION );
+				maxplayerTotal +=evaluatePos(row,col, MAX_PLAYER, D2_DIRECTION );
 			}
 			else if((state[MIN_PLAYER][row] & colMask[col])!=0){
-				evaluatePos(row,col, MIN_PLAYER, D2_DIRECTION);
+				minplayerTotal -=evaluatePos(row,col, MIN_PLAYER, D2_DIRECTION);
 			}
 		}
 		for(int i=1; i<ROWS; i++){
@@ -463,14 +475,14 @@ public class GameState {
 			int row = r+i;
 			int col = c-i;
 			if((state[MAX_PLAYER][row] & colMask[col])!=0){
-				evaluatePos(row,col, MAX_PLAYER, D2_DIRECTION);
+				maxplayerTotal +=evaluatePos(row,col, MAX_PLAYER, D2_DIRECTION);
 			}
 			else if((state[MIN_PLAYER][row] & colMask[col])!=0){
-				evaluatePos(row,col, MIN_PLAYER, D2_DIRECTION);
+				minplayerTotal -=evaluatePos(row,col, MIN_PLAYER, D2_DIRECTION);
 			}
 		}
 		
-		return 0;
+		return maxplayerTotal+minplayerTotal;
 	}
 	public int testDiagonal(int r, int c, int side){
 		//check diagonal /

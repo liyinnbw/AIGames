@@ -162,10 +162,13 @@ public class GameTree {
 		
 		//evaluate all moves
 		for(Point p : nextPossibleMoves){
-			curr.addPiece((int)p.getX(), (int)p.getY());
+			int x = (int)p.getX();
+			int y = (int)p.getY();
+			int valueBeforeMove = curr.updateValue(y, x);
+			curr.addPiece(x, y);
 			TreeNode t = new TreeNode();
 			t.nextMove = p;
-			t.v = curr.evaluate();
+			t.v = curr.updateValue(y,x) - valueBeforeMove;//evaluate();
 			curr.revertOneMove();
 			sortable.add(t);
 		}

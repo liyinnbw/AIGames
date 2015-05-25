@@ -102,8 +102,8 @@ public class MainUI extends JPanel{
    }
    
    public static void main(String[] args){
-	  JFrame mainFrame = new JFrame("Five In A Row");
-	  MainUI gameboard = new MainUI();
+	  final JFrame mainFrame = new JFrame("Five In A Row");
+	  final MainUI gameboard = new MainUI();
 	  mainFrame.setSize(gameboard.XO*2+gameboard.GRID_COLS*gameboard.UNIT-gameboard.UNIT,
 			  			gameboard.YO*2+gameboard.GRID_ROWS*gameboard.UNIT-gameboard.UNIT);
 	  mainFrame.addWindowListener(new WindowAdapter() {

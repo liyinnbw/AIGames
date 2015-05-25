@@ -2,17 +2,15 @@ package wuziqi;
 
 import java.awt.Point;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Stack;
+import java.util.Map;
 
 public class GameTree {
 	public static final long timeLim = 30000; //30s
@@ -56,6 +54,7 @@ public class GameTree {
 	public void setCurrState(GameState curr) {
 		this.currState = curr;
 	}
+	
 	public void setStateLibrary(){
 		moveLib = new HashMap<Integer, Point>();
 		String filename = "stateLib.txt";
@@ -68,7 +67,7 @@ public class GameTree {
 				//TODO: store moves to library
 			}
 			System.out.println(moveLib.size());
-			for (HashMap.Entry<Integer, Point> entry : moveLib.entrySet()){
+			for (Map.Entry<Integer, Point> entry : moveLib.entrySet()){
 				System.out.println(entry.getValue());
 			}
 			
@@ -83,6 +82,7 @@ public class GameTree {
 			System.out.println("===== finished reading lib =====");
 		}
 	}
+	
 	public GameTree(GameState curr, int dpLim){
 		System.out.println("agent created");
 		setCurrState(curr);
@@ -114,9 +114,10 @@ public class GameTree {
 		//clean outdated hash
 		int outdatedCount = 0;
 		int currTotalMoveCount = currState.getMoves().size();
-		Iterator<HashMap.Entry<Integer, TreeNode>> it = hm.entrySet().iterator();
+		
+		Iterator<Map.Entry<Integer, TreeNode>> it = hm.entrySet().iterator();
 		while(it.hasNext()){
-			HashMap.Entry<Integer, TreeNode> entry = it.next();
+			Map.Entry<Integer, TreeNode> entry = it.next();
 			if(entry.getValue().moveCount<currTotalMoveCount){
 				it.remove();
 				outdatedCount++;

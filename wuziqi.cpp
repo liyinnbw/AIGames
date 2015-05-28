@@ -4,12 +4,14 @@
 #include <QDebug>
 #include <QPushButton>
 #include <QMessageBox>
+#include <ctime>
 
 int XO=50;
 int YO=50;
 int UNIT = 60;
-int GRID_ROWS = 6;	//vertices, not squares
-int GRID_COLS = 6;	//vertices, not squares
+int GRID_ROWS = 15;	//vertices, not squares
+int GRID_COLS = 15;	//vertices, not squares
+int SEARCH_TIME = 3; //seconds
 
 Wuziqi::Wuziqi(QWidget *parent, Qt::WFlags flags)
 	: QMainWindow(parent, flags)
@@ -36,44 +38,41 @@ void Wuziqi::newGame(){
 	if(gameState!=NULL){
 		delete gameState;
 	}
-	gameState = new GameState(GRID_ROWS,GRID_COLS, GameState::BLACK_SIDE);
+	gameState	= new GameState(GRID_ROWS,GRID_COLS, GameState::MAX_PLAYER);
+	if(agent!=NULL){
+		delete agent;
+	}
+	agent		= new GameTree (gameState, SEARCH_TIME);
 	setFixedSize(XO*2+GRID_COLS*UNIT-UNIT,YO*2+GRID_ROWS*UNIT-UNIT);
-	qDebug()<<(gameState->toString()).c_str();
+	//qDebug()<<(gameState->toString()).c_str();
 	qDebug()<<"game score ="<<gameState->evaluate();
 }
-void Wuziqi::aiMove(){
-	qDebug()<<"====ai move====";
-	if(gameState->getCurrSide()==GameState::WHITE_SIDE){
-		//qDebug()<<(gameState->toString()).c_str();
-		GameTree gt(3, gameState, gameState->getCurrSide());
-		//qDebug()<<(gt.getRootState()->toString()).c_str();
-
-		GameState nextBest = gt.next();
-		gameState->setGameState(nextBest.getGameState());
-		qDebug()<<"game score ="<<gameState->evaluate();
-		qDebug()<<(gameState->toString()).c_str();
-		update();
-		
-		if(gameState->isGameOver()){
-			message ->show();
-		}else{
-			gameState->setSide(gameState->getCurrSide()*-1);
-		}
+void Wuziqi::agentMove(){
+	if(gameState->getCurrSide()==GameState::MIN_PLAYER){
+		clock_t start = clock();
+		Point nextBestMove = agent->nextMove();
+		clock_t end = clock();
+		qDebug()<<"cleared outdated hash="<<agent->outdatedCount;
+		qDebug()<<"Reuse saved nodes="<<agent->hmQuerySuccessfulCount<<"/"<<agent->hm.size()<<" max depth reached="<<agent->maxDepthReached<<" average branching="<<agent->branchesCount/agent->nodesVisitedCount;
+		qDebug()<<"ai move=("<<nextBestMove.x<<","<<nextBestMove.y<<") move calculation time="<<(end-start)*1.0/CLOCKS_PER_SEC<<"s (sorting ="<<agent->totalSortingTime*1.0/CLOCKS_PER_SEC<<"s)";;
+		gameState->addPiece(nextBestMove.x, nextBestMove.y);
 	}
 }
 void Wuziqi::mousePressEvent (QMouseEvent * e){
-	if(gameState->getCurrSide()==GameState::BLACK_SIDE){
+	if(gameState->getCurrSide()==GameState::MAX_PLAYER){
 		QPoint gridPos = posOnGrid(e->pos());
 		qDebug()<<"mouse press on board"<<gridPos;
 		gameState->addPiece(gridPos.x(),gridPos.y());
-		qDebug()<<"game score ="<<gameState->evaluate();
-		qDebug()<<(gameState->toString()).c_str();
 		update();
 		
-		if(gameState->isGameOver()){
+		if(gameState->isGameOver()!=-1){
 			message ->show();
-		}else{
-			aiMove();
+		}
+		else{
+			agentMove();
+			if(gameState->isGameOver()!=-1){
+				message ->show();
+			}
 		}
 	}
 }
@@ -108,17 +107,48 @@ void Wuziqi::drawGrid(QPainter *qp)
 		}
 	}
 
-	std::vector<myPiece> pieces = gameState->getPieces();
-	for(int i=0; i<pieces.size(); i++){
-		myPiece p = pieces.at(i);
-		if(p.side== GameState::WHITE_SIDE){
-			QBrush whiteBrush(Qt::white, Qt::SolidPattern);  
-			qp->setBrush(whiteBrush);
-		}else{
-			QBrush blackBrush(Qt::black, Qt::SolidPattern);  
-			qp->setBrush(blackBrush);
-		}
-		qp->drawEllipse(posAbsolute(QPoint(p.x,p.y)),int(0.4*UNIT),int(0.4*UNIT));
+	int *state = gameState->getGameState();
+	int *colMask = (int*) malloc (GRID_COLS*sizeof(int));
+	for(int i=0; i<GRID_COLS; i++){
+		colMask[i]=1<<GRID_COLS-1-i;
 	}
+
+	//draw maxplayer pieces
+	QBrush blackBrush(Qt::black, Qt::SolidPattern);  
+	qp->setBrush(blackBrush);
+	for(int i=0; i<GRID_ROWS; i++){
+		int row = state[i];
+		for(int j=0; j<GRID_COLS; j++){
+			int bit = row & colMask[j];
+			if(bit!=0){
+				qp->drawEllipse(posAbsolute(QPoint(j,i)),int(0.4*UNIT),int(0.4*UNIT));
+			}
+		}
+	}
+
+	//draw minplayer pieces
+	QBrush whiteBrush(Qt::white, Qt::SolidPattern);  
+	qp->setBrush(whiteBrush);
+	for(int i=0; i<GRID_ROWS; i++){
+		int row = state[GRID_ROWS+i];
+		for(int j=0; j<GRID_COLS; j++){
+			int bit = row & colMask[j];
+			if(bit!=0){
+				qp->drawEllipse(posAbsolute(QPoint(j,i)),int(0.4*UNIT),int(0.4*UNIT));
+			}
+		}
+	}
+
+	//draw latest move
+	if(!gameState->getMoves().empty()){
+		QBrush redBrush(Qt::red, Qt::SolidPattern);  
+		qp->setBrush(redBrush);
+		int d = (int) (UNIT*0.1);
+		Point lastMove = gameState->getMoves().back();
+		QPoint ap = posAbsolute(QPoint(lastMove.x,lastMove.y));
+		qp->drawEllipse(ap,d,d);
+	}
+
+	//qDebug()<<(gameState->toString()).c_str();
 	
 }

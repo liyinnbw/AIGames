@@ -1,7 +1,8 @@
 #ifndef WUZIQI_H
 #define WUZIQI_H
 #include "GameState.h"
-#include "State.h"
+#include "GameTree.h"
+
 #include <QtGui/QMainWindow>
 #include <QMouseEvent>
 class QPushButton;
@@ -23,8 +24,9 @@ public slots:
 private:
 	QPoint posOnGrid(QPoint);
 	QPoint posAbsolute(QPoint);
-	void aiMove();
+	void agentMove();
 	GameState *gameState;
+	GameTree  *agent;
 	QMessageBox *message;
 };
 

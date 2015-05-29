@@ -16,10 +16,11 @@ public class TestGameTree {
 	GameState g;
 	public static int COLS=15;
 	public static int ROWS=15;
+	public static int TIMELIM = 3000; //miliseconds
 	@Before
 	public void init() {
 		g = new GameState(ROWS,COLS,GameState.MAX_PLAYER);
-		gt = new GameTree(g,8);
+		gt = new GameTree(g,TIMELIM);
 		
 	}
 
@@ -260,6 +261,7 @@ public class TestGameTree {
 		System.out.println(gt.nextMove());
 		*/
 		
+		/*
 		g = new GameState(ROWS,COLS,GameState.MAX_PLAYER);
 		g.addPiece(9, 7);
 		g.addPiece(9, 6);
@@ -295,6 +297,24 @@ public class TestGameTree {
 		System.out.println(g.nextPossibleMoves());
 		gt.setCurrState(g);
 		System.out.println(gt.nextMove());
+		*/
+		
+		g = new GameState(ROWS,COLS,GameState.MAX_PLAYER);
+		g.addPiece(7,5);
+		g.addPiece(6,4);
+		g.addPiece(8,4);
+		g.addPiece(6,6);
+		g.addPiece(8,3);
+		g.addPiece(6,7);
+		g.addPiece(6,5);
+		System.out.println(g);
+		System.out.println(g.getCurrSide());
+		System.out.println(g.nextPossibleMoves());
+		gt.setCurrState(g);
+		Point p = gt.nextMove();
+		System.out.println(p);
+		assertTrue(p.equals(new Point(8,5)) || p.equals(new Point(5,5)) || p.equals(new Point(8,2)));
+		
 	}
 	
 	/*

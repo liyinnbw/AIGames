@@ -4,8 +4,6 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class GameState {
 	public static final int MAX_PLAYER = 0;
@@ -100,6 +98,7 @@ public class GameState {
 	private int currSide;
 	private int[][] state;	//[0][]: max player [1][]: min player
 	private int[] colMask;	//for extracting bit at specific column of a row
+	private int[] nextMap;
 	private int[][][][] value;//SIDE,ROW,COL,DIRECTION
 	private Stack<Point> moves;
 
@@ -175,7 +174,9 @@ public class GameState {
 	public void initMoves(){
 		moves = new Stack<Point>();
 	}
-
+	public void initNextMap(){
+		nextMap = new int[ROWS*COLS];
+	}
 	public GameState(int r, int c, int side){
 		setRows(r);
 		setCols(c);
@@ -183,6 +184,7 @@ public class GameState {
 		initState();
 		initMoves();
 		initValue();
+		initNextMap();
 		
 
 	}
@@ -263,6 +265,58 @@ public class GameState {
 		
 		return true;
 	}
+	public List<Point> getUnoccupiedNeighbours(){
+		List<Point> neighbours = new ArrayList<Point>();
+		
+		int occupied[] = new int[ROWS];
+		for(int i=0; i<ROWS; i++){
+			occupied[i]=state[MAX_PLAYER][i] | state[MIN_PLAYER][i];
+		}
+
+		initNextMap();
+
+		for(int i=0; i<ROWS; i++){
+			int row = occupied[i];
+			if(row == 0) continue;
+			for(int j=0; j<COLS; j++){
+				if((row & colMask[j])!=0){
+					//if is 1, set 0 neighbour pos =1, set this pos =-1
+					int idx = i*COLS+j;		//this pos
+					nextMap[idx]=-1;
+					int nidx = idx-COLS;	//north
+					if(i>0 && nextMap[nidx]==0)					nextMap[nidx]=1;
+					nidx = idx-COLS-1;		//north-west
+					if(i>0 && j>0 && nextMap[nidx]==0)			nextMap[nidx]=1;
+					nidx = idx-COLS+1;		//north-east
+					if(i>0 && j<COLS-1 && nextMap[nidx]==0)		nextMap[nidx]=1;
+
+					nidx = idx+COLS;		//south
+					if(i<ROWS-1 && nextMap[nidx]==0)			nextMap[nidx]=1;
+					nidx = idx+COLS-1;		//south-west
+					if(i<ROWS-1 && j>0 && nextMap[nidx]==0)		nextMap[nidx]=1;
+					nidx = idx+COLS+1;		//south-east
+					if(i<ROWS-1 && j<COLS-1 && nextMap[nidx]==0)nextMap[nidx]=1;
+
+					nidx = idx-1;			//west
+					if(j>0 && nextMap[nidx]==0)					nextMap[nidx]=1;
+					nidx = idx+1;			//east
+					if(j<COLS-1 && nextMap[nidx]==0)			nextMap[nidx]=1;
+				}
+			}
+		}
+
+
+		for(int i=0; i<ROWS; i++){
+			for(int j=0; j<COLS; j++){
+				if(nextMap[i*COLS+j]==1){ 
+					neighbours.add(new Point(j,i));
+				}
+			}
+		}
+
+		return neighbours;
+		
+	}
 	public List<Point> checkMustMoves(List<Point> nexts){
 		List<Point> winMoves = new ArrayList<Point>();
 		List<Point> blockWinMoves = new ArrayList<Point>();
@@ -301,31 +355,12 @@ public class GameState {
 	public List<Point> nextPossibleMoves(){
 		List<Point> nexts = new ArrayList<Point>();
 		if(isGameOver()!=-1) return nexts;
-		
+		/*
 		int occupied[] = new int[ROWS];
 		for(int i=0; i<ROWS; i++){
 			occupied[i]=state[MAX_PLAYER][i] | state[MIN_PLAYER][i];
 		}
-		
-		/*
-		//prioritize the latestMove first, maximum 8 possibilities
-		Point latestMove = moves.peek();
-		int latestR = (int) latestMove.getY();
-		int latestC = (int) latestMove.getX();
-		
-		for(int i=-1; i<=1; i++){
-			if(latestR+i<0 || latestR+i>= ROWS) continue;
-			int row = occupied[latestR+i];
-			for(int j=-1; j<=1; j++){
-				if(i==0 && j==0) continue;
-				if(latestC+j<0 || latestC+j>=COLS) continue;
-				int newRow = row | colMask[latestC+j];
-				if(newRow != row){
-					nexts.add(new Point(latestC+j, latestR+i));
-				}
-			}
-		}
-		*/
+
 		for(int i=0; i<ROWS; i++){
 			int row = occupied[i];
 			for(int j=0; j<COLS; j++){
@@ -336,13 +371,14 @@ public class GameState {
 				}
 	 		}
 		}
-		
+		*/
+		nexts = getUnoccupiedNeighbours();
 		nexts = checkMustMoves(nexts);
 		
 		return nexts;
 		
 	}
-
+	
 	public int evaluate(){
 		
 		if(checkConnect(MAX_PLAYER,WIN_CONNECT)) return MAX_STATE_VALUE;
@@ -351,28 +387,52 @@ public class GameState {
 		int maxplayerTotal = 0;
 		int minplayerTotal = 0;
 		
-		
-		for(int i=0; i<ROWS; i++){
-			for(int j=0; j<COLS; j++){
-				
-				
-				//only need to calculate for non-zero pos
-				if((state[MAX_PLAYER][i] & colMask[j])!=0){
-					int maxplayerValue=evaluatePos(i,j,MAX_PLAYER, ALL_DIRECTION);
-					if (maxplayerValue == MAX_STATE_VALUE) return MAX_STATE_VALUE;
-					maxplayerTotal+=(maxplayerValue+1);
+		if(currSide == MAX_PLAYER){		//the next move is max player
+			for(int i=0; i<ROWS; i++){
+				for(int j=0; j<COLS; j++){
+					//only need to calculate for non-zero pos
+					if((state[MAX_PLAYER][i] & colMask[j])!=0){	//prioritize evaluation for max player in case tie at win situation
+						int maxplayerValue=evaluatePos(i,j,MAX_PLAYER, ALL_DIRECTION);
+						if (maxplayerValue == MAX_STATE_VALUE){ 
+							return MAX_STATE_VALUE;
+						}else{
+							maxplayerTotal+=(maxplayerValue+1);
+						}
+					}
+					else if((state[MIN_PLAYER][i] & colMask[j])!=0){
+						int minplayerValue=0-evaluatePos(i,j,MIN_PLAYER, ALL_DIRECTION);
+						if (minplayerValue == MIN_STATE_VALUE){
+							return MIN_STATE_VALUE;
+						}else{
+							minplayerTotal+=(minplayerValue-1);
+						}
+					}
 				}
-				else if((state[MIN_PLAYER][i] & colMask[j])!=0){
-					int minplayerValue=0-evaluatePos(i,j,MIN_PLAYER, ALL_DIRECTION);
-					if (minplayerValue == MIN_STATE_VALUE) return MIN_STATE_VALUE;
-					minplayerTotal+=(minplayerValue-1);
+			}
+		}else{							//the next move is min player
+			for(int i=0; i<ROWS; i++){	
+				for(int j=0; j<COLS; j++){
+					//only need to calculate for non-zero pos
+					if((state[MIN_PLAYER][i] & colMask[j])!=0){	//prioritize evaluation for min player in case tie at win situation
+						int minplayerValue=0-evaluatePos(i,j,MIN_PLAYER, ALL_DIRECTION);
+						if (minplayerValue == MIN_STATE_VALUE){
+							return MIN_STATE_VALUE;
+						}else{
+							minplayerTotal+=(minplayerValue-1);
+						}
+					}
+					else if((state[MAX_PLAYER][i] & colMask[j])!=0){
+						int maxplayerValue=evaluatePos(i,j,MAX_PLAYER, ALL_DIRECTION);
+						if (maxplayerValue == MAX_STATE_VALUE){ 
+							return MAX_STATE_VALUE;
+						}else{
+							maxplayerTotal+=(maxplayerValue+1);
+						}
+					}
 				}
-				
-				//maxplayerTotal += value[MAX_PLAYER][i][j][0];
-				//minplayerTotal -= value[MIN_PLAYER][i][j][0];
-				
 			}
 		}
+		
 		
 		return maxplayerTotal+minplayerTotal;//maxplayerTotal/5*2+minplayerTotal/5*3;
 

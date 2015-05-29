@@ -28,7 +28,7 @@ public class MainUI extends JPanel{
 	   UNIT = 60;
 	   GRID_ROWS = 15;	//vertices, not squares
 	   GRID_COLS = 15;	//vertices, not squares
-	   SEARCH_TIME = 3000;
+	   SEARCH_TIME = 3000; //miliseconds
 	   newGame();
    }
    private void newGame(){

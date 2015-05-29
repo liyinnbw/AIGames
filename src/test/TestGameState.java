@@ -730,4 +730,38 @@ public class TestGameState {
 		b = Integer.parseInt("000000000000000",2);
 		System.out.println("evaluation result = "+g.dead2_5test(a,b,4));
 	}
+	@Test
+	public void printConst(){
+		System.out.println(	GameState.BIT_LIVE_4);  
+		System.out.println(	GameState.BIT_DEAD_4_1);  
+		System.out.println(	GameState.BIT_DEAD_4_2);  
+		System.out.println(	GameState.BIT_DEAD_4_3);  
+		System.out.println(	GameState.BIT_DEAD_4_4);  
+		System.out.println(	GameState.BIT_DEAD_4_5);  
+		System.out.println(	GameState.BIT_LIVE_3_2);  
+		System.out.println(	GameState.BIT_LIVE_3_3);  
+		System.out.println(	GameState.BIT_LIVE_3_4);  
+		System.out.println(	GameState.BIT_DEAD_3_1);  
+		System.out.println(	GameState.BIT_DEAD_3_2);  
+		System.out.println(	GameState.BIT_DEAD_3_3);  
+		System.out.println(	GameState.BIT_DEAD_3_4);  
+		System.out.println(	GameState.BIT_DEAD_3_5);  
+		System.out.println(	GameState.BIT_DEAD_3_6);  
+		System.out.println(	GameState.BIT_DEAD_3_7);  
+		System.out.println(	GameState.BIT_DEAD_3_8);  
+		System.out.println(	GameState.BIT_DEAD_3_9);  
+		System.out.println(	GameState.BIT_DEAD_3_10);  
+		System.out.println(	GameState.BIT_LIVE_2);
+		System.out.println(	GameState.BIT_DEAD_2_1);  
+		System.out.println(	GameState.BIT_DEAD_2_2);  
+		System.out.println(	GameState.BIT_DEAD_2_3);  
+		System.out.println(	GameState.BIT_DEAD_2_4);  
+		System.out.println(	GameState.BIT_DEAD_2_5);
+		System.out.println(	GameState.BIT_DEAD_2_6);  
+		System.out.println(	GameState.BIT_MASK_8);  
+		System.out.println(	GameState.BIT_MASK_7);  
+		System.out.println(	GameState.BIT_MASK_6);  
+		System.out.println(	GameState.BIT_MASK_5);
+		System.out.println(	GameState.BIT_MASK_4);
+	}
 }

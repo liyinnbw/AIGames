@@ -22,7 +22,9 @@ public class MainUI extends JPanel{
    public GameState gameState;
    public GameTree agent;
    public Image[][] chessImgs;
-   public Point selected; 
+   public Point selectedPos; 
+   public int selectedPieceType;
+   public int selectedPieceIdx;
    public boolean waitForSelection;
    public MainUI(){
 	   SEARCH_TIME = 3000; //miliseconds
@@ -32,7 +34,9 @@ public class MainUI extends JPanel{
    private void newGame(){
 	   gameState = new GameState(GRID_ROWS,GRID_COLS,GameState.MAX_PLAYER);
 	   agent = new GameTree(gameState, SEARCH_TIME);
-	   selected = null;
+	   selectedPos = null;
+	   selectedPieceType = -1;
+	   selectedPieceIdx = -1;
 	   waitForSelection = true;
    }
    private void initChessImages(){
@@ -77,10 +81,10 @@ public class MainUI extends JPanel{
    }
    public void agentMove(){
 	   long start = System.currentTimeMillis();
-	   Point nextBestMove = agent.nextMove();
+	   GameState.Move nextBestMove = agent.nextMove();
 	   long end = System.currentTimeMillis();
 	   System.out.println("ai move = "+nextBestMove+" move calculation time = "+(end-start)/1000.0+" s");
-	   gameState.makeMove((int)nextBestMove.getX(), (int)nextBestMove.getY());
+	   //gameState.makeMove((int)nextBestMove.getX(), (int)nextBestMove.getY());
    }
    @Override
    public void paint (Graphics g) {
@@ -117,7 +121,9 @@ public class MainUI extends JPanel{
 				   Point ap = posAbsolute(new Point(c,r));
 				   int side = i/PIECE_TYPES;
 				   int type = i%PIECE_TYPES;
-				   if(selected!=null && (selected.getX()==c && selected.getY()==r)){
+				   if(selectedPos!=null && (selectedPos.getX()==c && selectedPos.getY()==r)){
+					   selectedPieceType = i;
+					   selectedPieceIdx  = j;
 					   side = side+2;
 				   }
 				   
@@ -147,10 +153,10 @@ public class MainUI extends JPanel{
 		        Point p = gameboard.posOnGrid(e.getPoint());
 		        System.out.println("mouse click "+p);
 		        if(gameboard.waitForSelection){
-		        	gameboard.selected = p;
+		        	gameboard.selectedPos = p;
 		        	gameboard.waitForSelection = false;
 		        }else{
-		        	if(gameboard.gameState.makeMove((int)p.getX(), (int)p.getY())){
+		        	if(gameboard.gameState.makeMove(gameboard.selectedPieceType, gameboard.selectedPieceIdx, (int) p.getY(), (int)p.getX())){
 				        int over = gameboard.gameState.isGameOver();
 				        if(over!=-1){
 				        	String message;
@@ -182,7 +188,9 @@ public class MainUI extends JPanel{
 				        }
 				    
 		        	}
-		        	gameboard.selected = null;
+		        	gameboard.selectedPos = null;
+		        	gameboard.selectedPieceType = -1;
+		        	gameboard.selectedPieceIdx = -1;
 		        	gameboard.waitForSelection = true;
 		        }
 		        gameboard.repaint();

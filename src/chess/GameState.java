@@ -17,10 +17,22 @@ public class GameState {
 	public static final int PIECE_TYPES = 7;
 	
 	private int state[][];	//[piece id]= location
+	private int occupied[];
 	private int currSide;
 	private int[] colMask;	//for extracting bit at specific column of a row
-	private Stack<Point> moves;
-	
+	public class Move{
+		public int pieceType;
+		public int pieceIdx;
+		public int fromPos;
+		public int toPos;
+		public Move(int pt, int pi, int fp, int tp){
+			pieceType = pt;
+			pieceIdx  = pi;
+			fromPos   = fp;
+			toPos     = tp;
+		}
+	}
+	private Stack<Move> moves;
 	private static final int power[][][] = {
 		{//0: jiang 
 			{0,	0,  0,  0,  0,  0,  0,  0,  0},
@@ -112,7 +124,7 @@ public class GameState {
 	
 	
 
-	public Stack<Point> getMoves() {
+	public Stack<Move> getMoves() {
 		return moves;
 	}
 	public Stack<Point> copyStack(Stack<Point> src){
@@ -122,10 +134,6 @@ public class GameState {
 		}
 		return dest;
 	}
-	public void setMoves(Stack<Point> moves) {
-		this.moves = copyStack(moves);
-	}
-
 	public int getCurrSide() {
 		return currSide;
 	}
@@ -136,15 +144,8 @@ public class GameState {
 	public int[][] getGameState() {
 		return state;
 	}
-	public int[][] getGameState_simple(){
-		int[][] simpleState = new int[ROWS][COLS];
-		for(int i=0; i<ROWS; i++){
-			for(int j=0; j<COLS; j++){
-				simpleState[i][j]=-1;
-			}
-		}
-		
-		return simpleState;
+	public int[] getOccupied(){
+		return occupied;
 	}
 	
 	//virtual gameboard rows = ROWS, cols = 16
@@ -155,14 +156,16 @@ public class GameState {
 				state[i][j]=-1;				//<0 means no data or out of bound
 			}
 		}
-//0: jiang 	1 piece
-//1: shi	2 pieces
-//2: xiang	2 pieces
-//3: ma		2 pieces
-//4: che	2 pieces
-//5: pao	2 pieces
-//6: zu		5 pieces
-		//max player						//min player
+		
+		//0: jiang 	1 piece
+		//1: shi	2 pieces
+		//2: xiang	2 pieces
+		//3: ma		2 pieces
+		//4: che	2 pieces
+		//5: pao	2 pieces
+		//6: zu		5 pieces
+		
+		//max piece   pos					min piece   							pos
 		state[0][0] = 4; 					state[MIN_PLAYER*PIECE_TYPES+0 ][0] = (ROWS-1)*VIRTUAL_COLS+4;
 		state[1][0] = 3;					state[MIN_PLAYER*PIECE_TYPES+1 ][0] = (ROWS-1)*VIRTUAL_COLS+3;
 		state[1][1] = 5;					state[MIN_PLAYER*PIECE_TYPES+1 ][1] = (ROWS-1)*VIRTUAL_COLS+5;
@@ -182,13 +185,24 @@ public class GameState {
 	}
 
 	public void initMoves(){
-		moves = new Stack<Point>();
+		moves = new Stack<Move>();
 	}
-
+	public void initOccupied(){
+		occupied = new int[ROWS*VIRTUAL_COLS];
+		for(int i=0; i<GameState.PIECE_TYPES*2; i++){
+			   for(int j=0; j<5; j++){
+				   int pos = state[i][j];
+				   if(pos>=0){
+					   occupied[pos] = 1;
+				   }
+			   }
+		}
+	}
 	public GameState(int r, int c, int side){
 		setCurrSide(side);
 		initState();
 		initMoves();
+		initOccupied();
 	}
 	/*
 	public GameState(int r, int c, int side, int[][] state, Stack<Point> moves){//, int[][][][] value){
@@ -201,8 +215,36 @@ public class GameState {
 
 	}
 	*/
-	public boolean makeMove(int x, int y){
+	public boolean isLegleMove(Move m){
+		//wrong input
+		if(m.pieceType<0 || m.pieceIdx<0 || state[m.pieceType][m.pieceIdx]<0) return false;
 		
+		//attack same side
+		if(m.pieceType/PIECE_TYPES!=currSide) return false;
+		
+		return true;
+	}
+	public boolean makeMove(int pieceType, int pieceIdx, int r, int c){
+		if(pieceType<0 || pieceIdx<0 || state[pieceType][pieceIdx]<0) return false;
+		int fromPos = state[pieceType][pieceIdx];
+		int toPos   = r*VIRTUAL_COLS+c;
+		if(fromPos == toPos) return false;
+		state[pieceType][pieceIdx] = toPos;
+		moves.add(new Move(pieceType, pieceIdx, fromPos, toPos));
+		occupied[fromPos] = 0;
+		occupied[toPos] = 1;
+		setCurrSide(1-currSide);
+		return true;
+	}
+	public boolean makeMove(Move m){
+		if(m.pieceType<0 || m.pieceIdx<0 || state[m.pieceType][m.pieceIdx]<0) return false;
+		m.fromPos = state[m.pieceType][m.pieceIdx];
+		if(m.fromPos == m.toPos) return false;
+		state[m.pieceType][m.pieceIdx]  = m.toPos;
+		moves.add(m);
+		occupied[m.fromPos] = 0;
+		occupied[m.toPos] = 1;
+		setCurrSide(1-currSide);
 		return true;
 	}
 	public boolean makeNullMove(){
@@ -249,8 +291,8 @@ public class GameState {
 	}
 
 
-	public List<Point> nextPossibleMoves(){
-		List<Point> nexts = new ArrayList<Point>();
+	public List<Move> nextPossibleMoves(){
+		List<Move> nexts = new ArrayList<Move>();
 		if(isGameOver()!=-1) return nexts;
 		
 		return nexts;
@@ -268,7 +310,7 @@ public class GameState {
 
 	}
 	
-	public int updateValue(int r, int c){
+	public int updateValue(Move m){
 		int maxplayerTotal = 0;
 		int minplayerTotal = 0;
 		

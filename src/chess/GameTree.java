@@ -31,7 +31,7 @@ public class GameTree {
 		}
 	}
 	private class TreeNode{
-		public Point nextMove;
+		public GameState.Move nextMove;
 		public int moveCount;
 		public int v;
 		public int searchDepth;
@@ -115,15 +115,7 @@ public class GameTree {
 		debug = false;
 	}
 	
-	public Point nextMove(){
-		//if state lib is used, query it first
-		if(ENABLE_MOVELIB){
-			Point libMove = moveLib.get(hasher.hash(currState));
-			if (libMove!=null){
-				System.out.println("find next move in library");
-				return libMove;
-			}
-		}
+	public GameState.Move nextMove(){
 		
 		//clean outdated hash
 		int outdatedCount = 0;
@@ -172,18 +164,16 @@ public class GameTree {
 		System.out.println("sorting time = "+totalSortingTime/1000.0+" s");
 		return bestNext.nextMove;
 	}
-	public List<Point> sortMoves(GameState curr, List<Point> nextPossibleMoves, int side){
+	public List<GameState.Move> sortMoves(GameState curr, List<GameState.Move> nextPossibleMoves, int side){
 		List<TreeNode> sortable = new ArrayList<TreeNode>();
 		
 		//evaluate all moves
-		for(Point p : nextPossibleMoves){
-			int x = (int)p.getX();
-			int y = (int)p.getY();
-			int valueBeforeMove = curr.updateValue(y, x);
-			curr.makeMove(x, y);
+		for(GameState.Move m : nextPossibleMoves){
+			int valueBeforeMove = curr.updateValue(m);
+			curr.makeMove(m);
 			TreeNode t = new TreeNode();
-			t.nextMove = p;
-			t.v = curr.updateValue(y,x) - valueBeforeMove;//evaluate();
+			t.nextMove = m;
+			t.v = curr.updateValue(m) - valueBeforeMove;//evaluate();
 			curr.revertOneMove();
 			sortable.add(t);
 		}
@@ -217,7 +207,7 @@ public class GameTree {
 			});
 		}
 		*/
-		List<Point> sortedMoves = new ArrayList<Point>();
+		List<GameState.Move> sortedMoves = new ArrayList<GameState.Move>();
 		for(int i=0; i<sortable.size(); i++){
 			sortedMoves.add(sortable.get(i).nextMove);
 		}
@@ -227,7 +217,7 @@ public class GameTree {
 	public TreeNode minMaxAlphaBeta(GameState curr, int depth, int alpha, int beta, boolean useNullMove){
 		nodesVisitedCount++;
 		
-		Point previousBest = null;
+		GameState.Move previousBest = null;
 		//query hash table
 		if(ENABLE_HASH){	
 			TreeNode queryRoot = hm.get(hasher.hash(curr));
@@ -241,7 +231,7 @@ public class GameTree {
 			}
 		}
 
-		List<Point> nextPossibleMoves = curr.nextPossibleMoves();
+		List<GameState.Move> nextPossibleMoves = curr.nextPossibleMoves();
 		
 		long start = System.currentTimeMillis();
 		//order search by resultant state value
@@ -257,7 +247,7 @@ public class GameTree {
 		}
 		
 		TreeNode root = new TreeNode();	//the node to return
-		Point selectedMove = null;		//the state selected
+		GameState.Move selectedMove = null;		//the state selected
 		int selectedSearchDepth = 0;
 		if(nextPossibleMoves.size()==0){
 			root.nextMove = null;
@@ -296,10 +286,10 @@ public class GameTree {
 			
 			
 			
-			for(Point p: nextPossibleMoves){
+			for(GameState.Move m: nextPossibleMoves){
 				branchesCount++;
 				
-				curr.makeMove((int)p.getX(), (int)p.getY());
+				curr.makeMove(m);
 				int value = 0;
 				int searchDepth = depth;
 				if(depth<=0){
@@ -320,12 +310,12 @@ public class GameTree {
 				
 				if(maxNotInit){
 					max = value;
-					selectedMove = p; 
+					selectedMove = m; 
 					selectedSearchDepth = searchDepth;
 					maxNotInit = false;
 				}else if(value>max){
 					max = value;
-					selectedMove = p; 
+					selectedMove = m; 
 					selectedSearchDepth = searchDepth;
 				}
 				
@@ -372,10 +362,10 @@ public class GameTree {
 			}
 			
 			
-			for(Point p: nextPossibleMoves){
+			for(GameState.Move m: nextPossibleMoves){
 				branchesCount++;
 				
-				curr.makeMove((int)p.getX(), (int)p.getY());
+				curr.makeMove(m);
 				int value = 0;
 				int searchDepth = depth;
 				if(depth<=0){
@@ -396,12 +386,12 @@ public class GameTree {
 				
 				if(minNotInit){
 					min = value;
-					selectedMove = p; 
+					selectedMove = m; 
 					selectedSearchDepth = searchDepth;
 					minNotInit = false;
 				}else if(value<min){
 					min = value;
-					selectedMove = p; 
+					selectedMove = m; 
 					selectedSearchDepth = searchDepth;
 				}
 				

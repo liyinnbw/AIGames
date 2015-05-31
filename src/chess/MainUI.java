@@ -32,7 +32,7 @@ public class MainUI extends JPanel{
 	   initChessImages();
    }
    private void newGame(){
-	   gameState = new GameState(GRID_ROWS,GRID_COLS,GameState.MAX_PLAYER);
+	   gameState = new GameState(GRID_ROWS,GRID_COLS,GameState.MIN_PLAYER);
 	   agent = new GameTree(gameState, SEARCH_TIME);
 	   selectedPos = null;
 	   selectedPieceType = -1;
@@ -111,6 +111,24 @@ public class MainUI extends JPanel{
 	   
 	   //game pieces
 	   int[][]state = gameState.getGameState(); 
+	   for(int i=0; i<state.length; i++){
+		   for(int j=0; j<GameState.COLS; j++){
+			   int pieceId = state[i][j];
+			   if(pieceId>=0){
+				   int picGroup = pieceId/PIECE_TYPES;
+				   int picType	= pieceId%PIECE_TYPES;
+				   
+				   if(selectedPos!=null && (selectedPos.getX()==j && selectedPos.getY()==i)){
+					   picGroup = picGroup+2;
+				   }
+				   
+				   Image img = chessImgs[picGroup][picType];
+				   Point ap = posAbsolute(new Point(j,i));
+				   g2d.drawImage(img, (int) ap.getX()-X_OFFSET-img.getHeight(this)/2, (int) ap.getY()-Y_OFFSET-img.getWidth(this)/2, this);
+			   }
+		   }
+	   }
+	   /*
 	   for(int i=0; i<GameState.PIECE_TYPES*2; i++){
 		   for(int j=0; j<5; j++){
 			   if(state[i][j]<0){
@@ -132,7 +150,7 @@ public class MainUI extends JPanel{
 			   }
 		   }
 	   }
-	   
+	   */
    }
    
    public static void main(String[] args){
@@ -153,11 +171,14 @@ public class MainUI extends JPanel{
 		        Point p = gameboard.posOnGrid(e.getPoint());
 		        System.out.println("mouse click "+p);
 		        if(gameboard.waitForSelection){
-		        	gameboard.selectedPos = p;
-		        	gameboard.waitForSelection = false;
+		        	if(gameboard.gameState.isValidSelection((int) p.getY(), (int) p.getX())){
+			        	gameboard.selectedPos = p;
+			        	gameboard.waitForSelection = false;
+		        	}
 		        }else{
-		        	if(gameboard.gameState.makeMove(gameboard.selectedPieceType, gameboard.selectedPieceIdx, (int) p.getY(), (int)p.getX())){
-				        int over = gameboard.gameState.isGameOver();
+		        	if(gameboard.gameState.isValidMove((int) p.getY(), (int) p.getX())){
+		        		gameboard.gameState.makeMove((int) gameboard.selectedPos.getY(), (int) gameboard.selectedPos.getX(), (int) p.getY(), (int)p.getX());
+		        		int over = gameboard.gameState.isGameOver();
 				        if(over!=-1){
 				        	String message;
 				        	if(over==gameboard.gameState.MAX_PLAYER) message = "Red Win";
@@ -168,29 +189,9 @@ public class MainUI extends JPanel{
 				        	{
 				        		gameboard.newGame();
 				        	}
-				        //}else{
-				        //	gameboard.agentMove();
-				        //	over = gameboard.gameState.isGameOver();
-					    //    if(over!=-1){
-					    //    	String message;
-					    //    	if(over==gameboard.gameState.MAX_PLAYER) message = "Black Win";
-					    //    	else if(over==gameboard.gameState.MIN_PLAYER) message = "White Win";
-					    //    	else message = "Tie";
-					    //    	int input = JOptionPane.showOptionDialog(mainFrame, message, "Message",JOptionPane.OK_OPTION, JOptionPane.INFORMATION_MESSAGE,null,null,null);
-					    //    	if(input == JOptionPane.OK_OPTION)
-					    //    	{
-					    //    		gameboard.newGame();
-					    //    		
-					    //    	}
-					    //    }
-				        //	}
-				        
 				        }
-				    
 		        	}
 		        	gameboard.selectedPos = null;
-		        	gameboard.selectedPieceType = -1;
-		        	gameboard.selectedPieceIdx = -1;
 		        	gameboard.waitForSelection = true;
 		        }
 		        gameboard.repaint();

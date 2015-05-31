@@ -21,15 +21,17 @@ public class GameState {
 	private int currSide;
 	private int[] colMask;	//for extracting bit at specific column of a row
 	public class Move{
-		public int pieceType;
-		public int pieceIdx;
-		public int fromPos;
-		public int toPos;
-		public Move(int pt, int pi, int fp, int tp){
-			pieceType = pt;
-			pieceIdx  = pi;
-			fromPos   = fp;
-			toPos     = tp;
+		public int fromR;
+		public int fromC;
+		public int toR;
+		public int toC;
+		public int rmPiec;
+		public Move(int fr, int fc, int tr, int tc, int rm){
+			fromR = fr;
+			fromC = fc;
+			toR   = tr;
+			toC   = tc;
+			rmPiec= rm;
 		}
 	}
 	private Stack<Move> moves;
@@ -147,7 +149,31 @@ public class GameState {
 	public int[] getOccupied(){
 		return occupied;
 	}
-	
+	public void initState(){
+		state = new int[ROWS][VIRTUAL_COLS];	//store piece idx
+		for(int i=0; i<ROWS; i++){
+			for(int j=0; j<VIRTUAL_COLS; j++){
+				state[i][j]=-1;
+			}
+		}
+		//1: jiang 	
+		//2: shi	
+		//3: xiang	
+		//4: ma		
+		//5: che	
+		//6: pao	
+		//7: zu		
+		state[0][0] = 4;	state[0][1] = 3;	state[0][2] = 2;	state[0][3] = 1;	state[0][4] = 0;	state[0][5] = 1;	state[0][6] = 2;	state[0][7] = 3;	state[0][8] = 4;
+		
+							state[2][1] = 5;																										state[2][7] = 5;
+		state[3][0] = 6;						state[3][2] = 6;						state[3][4] = 6;						state[3][6] = 6;						state[3][8] = 6;
+		
+		state[6][0] = 13;						state[6][2] = 13;						state[6][4] = 13;						state[6][6] = 13;						state[6][8] = 13;
+							state[7][1] = 12;																										state[7][7] = 12;
+							
+		state[9][0] = 11;	state[9][1] = 10;	state[9][2] = 9;	state[9][3] = 8;	state[9][4] = 7;	state[9][5] = 8;	state[9][6] = 9;	state[9][7] = 10;	state[9][8] = 11;
+	}
+	/*
 	//virtual gameboard rows = ROWS, cols = 16
 	public void initState(){
 		state = new int[PIECE_TYPES*2][5];	//store piece idx
@@ -183,7 +209,7 @@ public class GameState {
 		state[6][3] = 3*VIRTUAL_COLS+6;		state[MIN_PLAYER*PIECE_TYPES+6 ][3] = (ROWS-4)*VIRTUAL_COLS+6;
 		state[6][4] = 3*VIRTUAL_COLS+8;		state[MIN_PLAYER*PIECE_TYPES+6 ][4] = (ROWS-4)*VIRTUAL_COLS+8;
 	}
-
+	*/
 	public void initMoves(){
 		moves = new Stack<Move>();
 	}
@@ -202,7 +228,7 @@ public class GameState {
 		setCurrSide(side);
 		initState();
 		initMoves();
-		initOccupied();
+		//initOccupied();
 	}
 	/*
 	public GameState(int r, int c, int side, int[][] state, Stack<Point> moves){//, int[][][][] value){
@@ -215,35 +241,41 @@ public class GameState {
 
 	}
 	*/
-	public boolean isLegleMove(Move m){
-		//wrong input
-		if(m.pieceType<0 || m.pieceIdx<0 || state[m.pieceType][m.pieceIdx]<0) return false;
-		
-		//attack same side
-		if(m.pieceType/PIECE_TYPES!=currSide) return false;
-		
+	public boolean isValidMove(int r, int c){
+		if(isOOB(r,c))	return false;
+		int piece = state[r][c];
+		if(piece>=0){
+			if(piece/PIECE_TYPES == currSide) return false;
+		}
 		return true;
 	}
-	public boolean makeMove(int pieceType, int pieceIdx, int r, int c){
-		if(pieceType<0 || pieceIdx<0 || state[pieceType][pieceIdx]<0) return false;
-		int fromPos = state[pieceType][pieceIdx];
-		int toPos   = r*VIRTUAL_COLS+c;
-		if(fromPos == toPos) return false;
-		state[pieceType][pieceIdx] = toPos;
-		moves.add(new Move(pieceType, pieceIdx, fromPos, toPos));
-		occupied[fromPos] = 0;
-		occupied[toPos] = 1;
+	public boolean isValidSelection(int r, int c){
+		if(isOOB(r,c))	return false;
+		int piece = state[r][c];
+		if(piece<0)	return false;
+		if(piece/PIECE_TYPES != currSide) return false;
+		return true;
+	}
+	public boolean isOOB(int r, int c){
+		if(r<0 || r>=ROWS || c<0 ||c>=COLS) return true;
+		return false;
+	}
+	public boolean makeMove(int fromR, int fromC, int toR, int toC){
+		Move mv = new Move(fromR, fromC, toR, toC, state[toR][toC]);
+		state[toR][toC] = state[fromR][fromC];
+		state[fromR][fromC] = -1;
+		moves.add(mv);
 		setCurrSide(1-currSide);
 		return true;
 	}
 	public boolean makeMove(Move m){
-		if(m.pieceType<0 || m.pieceIdx<0 || state[m.pieceType][m.pieceIdx]<0) return false;
-		m.fromPos = state[m.pieceType][m.pieceIdx];
-		if(m.fromPos == m.toPos) return false;
-		state[m.pieceType][m.pieceIdx]  = m.toPos;
+		if(m.fromR<0 || m.fromC<0 || state[m.fromR][m.fromC]<0) return false;
+		m.toR = state[m.fromR][m.fromC];
+		if(m.toR == m.toC) return false;
+		state[m.fromR][m.fromC]  = m.toC;
 		moves.add(m);
-		occupied[m.fromPos] = 0;
-		occupied[m.toPos] = 1;
+		occupied[m.toR] = 0;
+		occupied[m.toC] = 1;
 		setCurrSide(1-currSide);
 		return true;
 	}
@@ -253,8 +285,14 @@ public class GameState {
 	}
 	public boolean revertOneMove(){
 		
-		if(moves.isEmpty()) return false;
-		
+		if(moves.isEmpty()){
+			return false;
+		}else{
+			Move mv = moves.pop();
+			state[mv.fromR][mv.fromC] = state[mv.toR][mv.toC];
+			state[mv.toR][mv.toC] = mv.rmPiec;
+		}
+		setCurrSide(1-currSide);
 		return true;
 	}
 	public boolean revertNullMove(){

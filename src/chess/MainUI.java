@@ -110,47 +110,26 @@ public class MainUI extends JPanel{
 	   g2d.drawLine(XO+5*UNIT-X_OFFSET, YO+(GRID_ROWS-1)*UNIT-Y_OFFSET, XO+3*UNIT-X_OFFSET, YO+(GRID_ROWS-3)*UNIT-Y_OFFSET);
 	   
 	   //game pieces
-	   int[][]state = gameState.getGameState(); 
+	   int[]state = gameState.getGameState(); 
 	   for(int i=0; i<state.length; i++){
-		   for(int j=0; j<GameState.COLS; j++){
-			   int pieceId = state[i][j];
-			   if(pieceId>=0){
-				   int picGroup = pieceId/PIECE_TYPES;
-				   int picType	= pieceId%PIECE_TYPES;
-				   
-				   if(selectedPos!=null && (selectedPos.getX()==j && selectedPos.getY()==i)){
-					   picGroup = picGroup+2;
-				   }
-				   
-				   Image img = chessImgs[picGroup][picType];
-				   Point ap = posAbsolute(new Point(j,i));
-				   g2d.drawImage(img, (int) ap.getX()-X_OFFSET-img.getHeight(this)/2, (int) ap.getY()-Y_OFFSET-img.getWidth(this)/2, this);
+		   int pieceId = state[i];
+		   if(pieceId!=GameState.UNOCCUPIED){
+			   int picGroup = pieceId/PIECE_TYPES;
+			   int picType	= pieceId%PIECE_TYPES;
+			   int r		= i>>4;
+			   int c		= i%16;
+			   if(selectedPos!=null && (selectedPos.getX()==c && selectedPos.getY()==r)){
+				   picGroup = picGroup+2;
 			   }
+			   
+			   Image img = chessImgs[picGroup][picType];
+			   Point ap = posAbsolute(new Point(c,r));
+			   g2d.drawImage(img, (int) ap.getX()-X_OFFSET-img.getHeight(this)/2, (int) ap.getY()-Y_OFFSET-img.getWidth(this)/2, this);
 		   }
+
 	   }
-	   /*
-	   for(int i=0; i<GameState.PIECE_TYPES*2; i++){
-		   for(int j=0; j<5; j++){
-			   if(state[i][j]<0){
-				   continue;
-			   }else{
-				   int r = state[i][j]/GameState.VIRTUAL_COLS;
-				   int c = state[i][j]%GameState.VIRTUAL_COLS;
-				   Point ap = posAbsolute(new Point(c,r));
-				   int side = i/PIECE_TYPES;
-				   int type = i%PIECE_TYPES;
-				   if(selectedPos!=null && (selectedPos.getX()==c && selectedPos.getY()==r)){
-					   selectedPieceType = i;
-					   selectedPieceIdx  = j;
-					   side = side+2;
-				   }
-				   
-				   Image img = chessImgs[side][type];
-				   g2d.drawImage(img, (int) ap.getX()-X_OFFSET-img.getHeight(this)/2, (int) ap.getY()-Y_OFFSET-img.getWidth(this)/2, this);
-			   }
-		   }
-	   }
-	   */
+	   System.out.println("currside = "+gameState.getCurrSide());
+	  
    }
    
    public static void main(String[] args){
@@ -176,13 +155,13 @@ public class MainUI extends JPanel{
 			        	gameboard.waitForSelection = false;
 		        	}
 		        }else{
-		        	if(gameboard.gameState.isValidMove((int) p.getY(), (int) p.getX())){
+		        	if(gameboard.gameState.isValidMove((int) gameboard.selectedPos.getY(), (int) gameboard.selectedPos.getX(), (int) p.getY(), (int) p.getX())){
 		        		gameboard.gameState.makeMove((int) gameboard.selectedPos.getY(), (int) gameboard.selectedPos.getX(), (int) p.getY(), (int)p.getX());
 		        		int over = gameboard.gameState.isGameOver();
 				        if(over!=-1){
 				        	String message;
-				        	if(over==gameboard.gameState.MAX_PLAYER) message = "Red Win";
-				        	else if(over==gameboard.gameState.MIN_PLAYER) message = "Black Win";
+				        	if(over==gameboard.gameState.MAX_PLAYER) message = "Black Win";
+				        	else if(over==gameboard.gameState.MIN_PLAYER) message = "Red Win";
 				        	else message = "Tie";
 				        	int input = JOptionPane.showOptionDialog(mainFrame, message, "Message",JOptionPane.OK_OPTION, JOptionPane.INFORMATION_MESSAGE,null,null,null);
 				        	if(input == JOptionPane.OK_OPTION)

@@ -272,9 +272,17 @@ public class GameState {
 	}
 	*/
 	public boolean isJMove(int fromR, int fromC, int toR, int toC){
+		int toPiece = state[(toR<<4)+toC];
+		
 		if(currSide == MIN_PLAYER){
+			//if attacking
+			if(toPiece == J && fromC == toC) return true;
+			
 			if(toR<UBOUND_J1 || toR>DBOUND_J1 || toC<LBOUND_J ||  toC>RBOUND_J) return false;
 		}else{
+			//if attacking
+			if(toPiece == J1 && fromC == toC) return true;
+			
 			if(toR<UBOUND_J  || toR>DBOUND_J  || toC<LBOUND_J ||  toC>RBOUND_J) return false;
 		}
 		int diff = ((toR-fromR)<<4)+toC-fromC;
@@ -554,10 +562,6 @@ public class GameState {
 	}
 
 	public int isGameOver(){
-		//if(checkConnect(MAX_PLAYER,WIN_CONNECT)) return MAX_PLAYER;	//0
-		//if(checkConnect(MIN_PLAYER,WIN_CONNECT)) return MIN_PLAYER;	//1
-		//if(checkFull()) return TIE;									//2
-		
 		int JCount = 0;
 		int J1Count = 0;
 		for(int i=0; i<state.length; i++){

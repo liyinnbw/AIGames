@@ -141,24 +141,13 @@ public class GameTree {
 		
 		TreeNode bestNext = null;
 		startTime = System.currentTimeMillis();
-		for(int depth = 4; ; depth++){
+		for(int depth = 1; ; depth++){
 			depthLim = depth;
 			bestNext = minMaxAlphaBeta(currState,depth-1,0-Integer.MAX_VALUE, Integer.MAX_VALUE, true);
 			maxDepthReached = depth;
 			long currTime = System.currentTimeMillis();
 			if((currTime - startTime > timeLim) || bestNext.v==GameState.MAX_STATE_VALUE || bestNext.v==GameState.MIN_STATE_VALUE || endSearch) break;
 		}
-
-		
-		
-		//it = hm.entrySet().iterator();
-		//while(it.hasNext()){
-		//	HashMap.Entry<Integer, TreeNode> entry = it.next();
-		//	if(entry.getValue().moveCount==2 && entry.getValue().nextMove.equals(new Point(5,6))){
-		//		System.out.println("verified saved node value = "+entry.getValue().v);
-		//	}
-		//}
-		
 		
 		System.out.println("Reuse saved nodes = "+hmQuerySuccessfulCount+"/"+hm.size()+" max depth reached = "+maxDepthReached+" average branching = "+branchesCount/nodesVisitedCount);
 		System.out.println("sorting time = "+totalSortingTime/1000.0+" s");
@@ -191,6 +180,7 @@ public class GameTree {
 	}
 
 	public TreeNode minMaxAlphaBeta(GameState curr, int depth, int alpha, int beta, boolean useNullMove){
+		useNullMove = false;
 		nodesVisitedCount++;
 		
 		GameState.Move previousBest = null;
@@ -211,7 +201,7 @@ public class GameTree {
 		
 		long start = System.currentTimeMillis();
 		//order search by resultant state value
-		nextPossibleMoves = sortMoves(curr, nextPossibleMoves, curr.getCurrSide());
+		//nextPossibleMoves = sortMoves(curr, nextPossibleMoves, curr.getCurrSide());
 		long end = System.currentTimeMillis();
 		totalSortingTime += end-start;
 		

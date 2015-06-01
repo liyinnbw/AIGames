@@ -198,7 +198,7 @@ public class MainUI extends JPanel{
 			  if(e.getKeyCode()==KeyEvent.VK_BACK_SPACE){
 				  System.out.println("revert move");
 				  gameboard.gameState.revertOneMove();
-				  if(gameboard.gameState.getCurrSide()==GameState.MIN_PLAYER){
+				  if(gameboard.gameState.getCurrSide()==GameState.MAX_PLAYER){
 					  gameboard.gameState.revertOneMove();
 				  }
 				  gameboard.repaint();

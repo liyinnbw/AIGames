@@ -191,9 +191,9 @@ public class GameState {
 	}
 	public void initState(){
 		state = new int[ROWS*HEX_COLS];	//store piece idx
-											//VIRTUAL_COLS = 16 instead of 9. 
-											//Accessing up/down cells become 4-bits shift
-											//Checking out-of-bound become a single & operation
+										//VIRTUAL_COLS = 16 instead of 9. 
+										//Accessing up/down cells become 4-bits shift
+
 		for(int i=0; i<state.length; i++){
 			state[i]=UNOCCUPIED;
 		}
@@ -206,11 +206,11 @@ public class GameState {
 		//7: zu		
 		state[0*HEX_COLS+0] = C;	state[0*HEX_COLS+1] = M;	state[0*HEX_COLS+2] = X;	state[0*HEX_COLS+3] = S;	state[0*HEX_COLS+4] = J;	state[0*HEX_COLS+5] = S;	state[0*HEX_COLS+6] = X;	state[0*HEX_COLS+7] = M;	state[0*HEX_COLS+8] = C;
 		
-										state[2*HEX_COLS+1] = P;																																									state[2*HEX_COLS+7] = P;
-		state[3*HEX_COLS+0] = Z;						state[3*HEX_COLS+2] = Z;						state[3*HEX_COLS+4] = Z;						state[3*HEX_COLS+6] = Z;						state[3*HEX_COLS+8] = Z;
+									state[2*HEX_COLS+1] = P;																																				state[2*HEX_COLS+7] = P;
+		state[3*HEX_COLS+0] = Z;								state[3*HEX_COLS+2] = Z;								state[3*HEX_COLS+4] = Z;								state[3*HEX_COLS+6] = Z;								state[3*HEX_COLS+8] = Z;
 		
-		state[6*HEX_COLS+0] = Z1;						state[6*HEX_COLS+2] = Z1;						state[6*HEX_COLS+4] = Z1;						state[6*HEX_COLS+6] = Z1;						state[6*HEX_COLS+8] = Z1;
-							state[7*HEX_COLS+1] = P1;																										state[7*HEX_COLS+7] = P1;
+		state[6*HEX_COLS+0] = Z1;								state[6*HEX_COLS+2] = Z1;								state[6*HEX_COLS+4] = Z1;								state[6*HEX_COLS+6] = Z1;								state[6*HEX_COLS+8] = Z1;
+									state[7*HEX_COLS+1] = P1;																																				state[7*HEX_COLS+7] = P1;
 							
 		state[9*HEX_COLS+0] = C1;	state[9*HEX_COLS+1] = M1;	state[9*HEX_COLS+2] = X1;	state[9*HEX_COLS+3] = S1;	state[9*HEX_COLS+4] = J1;	state[9*HEX_COLS+5] = S1;	state[9*HEX_COLS+6] = X1;	state[9*HEX_COLS+7] = M1;	state[9*HEX_COLS+8] = C1;
 	}
@@ -259,7 +259,6 @@ public class GameState {
 		setCurrSide(side);
 		initState();
 		initMoves();
-		//initOccupied();
 	}
 	/*
 	public GameState(int r, int c, int side, int[][] state, Stack<Point> moves){//, int[][][][] value){
@@ -272,44 +271,38 @@ public class GameState {
 
 	}
 	*/
+	
+	//precon: move is within board
 	public boolean isJMove(int fromR, int fromC, int toR, int toC){
-		if(isOOB(toR, toC)) return false;
+
 		int toPiece = state[(toR<<4)+toC];
 		
 		if(currSide == MIN_PLAYER){
+			//if not attacking
+			if(toPiece != J || fromC != toC){
+				if(toR<UBOUND_J1 || toC<LBOUND_J || toC>RBOUND_J) return false;
+			}
 			//if attacking
-			if(toPiece == J && fromC == toC){
+			else{
 				//check nothing between fromR & toR
-				if(fromR<toR){
-					for(int i=fromR+1; i<toR; i++){
-						if(state[(i<<4)+fromC]!=UNOCCUPIED) return false;
-					}
-				}else{
-					for(int i=toR+1; i<fromR; i++){
-						if(state[(i<<4)+fromC]!=UNOCCUPIED) return false;
-					}
+				for(int i=toR+1; i<fromR; i++){
+					if(state[(i<<4)+fromC]!=UNOCCUPIED) return false;
 				}
 				return true;
 			}
-			
-			if(toR<UBOUND_J1 || toR>DBOUND_J1 || toC<LBOUND_J ||  toC>RBOUND_J) return false;
 		}else{
+			//if not attacking
+			if(toPiece != J1 || fromC != toC){
+				if(toR>DBOUND_J  || toC<LBOUND_J ||  toC>RBOUND_J) return false;
+			}
 			//if attacking
-			if(toPiece == J1 && fromC == toC){
+			else{
 				//check nothing between fromR & toR
-				if(fromR<toR){
-					for(int i=fromR+1; i<toR; i++){
-						if(state[(i<<4)+fromC]!=UNOCCUPIED) return false;
-					}
-				}else{
-					for(int i=toR+1; i<fromR; i++){
-						if(state[(i<<4)+fromC]!=UNOCCUPIED) return false;
-					}
+				for(int i=fromR+1; i<toR; i++){
+					if(state[(i<<4)+fromC]!=UNOCCUPIED) return false;
 				}
 				return true;
 			}
-			
-			if(toR<UBOUND_J  || toR>DBOUND_J  || toC<LBOUND_J ||  toC>RBOUND_J) return false;
 		}
 		int diff = ((toR-fromR)<<4)+toC-fromC;
 		for(int i=0; i<J_MOVES.length; i++){
@@ -317,12 +310,13 @@ public class GameState {
 		}
 		return false;
 	}
+	//precon: move is within board
 	public boolean isSMove(int fromR, int fromC, int toR, int toC){
-		if(isOOB(toR, toC)) return false;
+		
 		if(currSide == MIN_PLAYER){
-			if(toR<UBOUND_J1 || toR>DBOUND_J1 || toC<LBOUND_J ||  toC>RBOUND_J) return false;
+			if(toR<UBOUND_J1 || toC<LBOUND_J ||  toC>RBOUND_J) return false;
 		}else{
-			if(toR<UBOUND_J  || toR>DBOUND_J  || toC<LBOUND_J ||  toC>RBOUND_J) return false;
+			if(toR>DBOUND_J  || toC<LBOUND_J ||  toC>RBOUND_J) return false;
 		}
 		int diff = ((toR-fromR)<<4)+toC-fromC;
 		for(int i=0; i<S_MOVES.length; i++){
@@ -330,12 +324,13 @@ public class GameState {
 		}
 		return false;
 	}
+	//precon: move is within board
 	public boolean isXMove(int fromR, int fromC, int toR, int toC){
-		if(isOOB(toR, toC)) return false;
+		
 		if(currSide == MIN_PLAYER){
-			if(toR<UBOUND_X1 || toR>DBOUND_X1 || toC<LBOUND_X ||  toC>RBOUND_X) return false;
+			if(toR<UBOUND_X1) return false;
 		}else{
-			if(toR<UBOUND_X  || toR>DBOUND_X  || toC<LBOUND_X ||  toC>RBOUND_X) return false;
+			if(toR>DBOUND_X) return false;
 		}
 		int diff = ((toR-fromR)<<4)+toC-fromC;
 		for(int i=0; i<X_MOVES.length; i++){
@@ -354,7 +349,7 @@ public class GameState {
 		return false;
 	}
 	public boolean isCMove(int fromR, int fromC, int toR, int toC){
-		if(isOOB(toR, toC)) return false;
+		
 		if (fromR == toR){
 			//check nothing between fromC & toC
 			if(fromC<toC){
@@ -384,7 +379,6 @@ public class GameState {
 		}
 	}
 	public boolean isPMove(int fromR, int fromC, int toR, int toC){
-		if(isOOB(toR, toC)) return false;
 		//if attacking
 		int toPiece = state[(toR<<4)+toC];
 		if(toPiece/PIECE_TYPES==(1-currSide)){
@@ -426,7 +420,6 @@ public class GameState {
 		
 	}
 	public boolean isZMove(int fromR, int fromC, int toR, int toC){
-		if(isOOB(toR, toC)) return false;
 		int diff = ((toR-fromR)<<4)+toC-fromC;
 		int mvLim = Z_MOVES.length;
 		if(currSide == MIN_PLAYER){
@@ -450,21 +443,8 @@ public class GameState {
 			if(piece/PIECE_TYPES == currSide) return false;
 		}
 		int from= (fromR<<4)+fromC;
-		//identify piece type
 		int pieceType = state[from];
 		switch(pieceType){
-		case J:
-		case J1:
-			return isJMove(fromR, fromC, toR, toC);
-		case S:
-		case S1:
-			return isSMove(fromR, fromC, toR, toC);
-		case X:
-		case X1:
-			return isXMove(fromR, fromC, toR, toC);
-		case M:
-		case M1:
-			return isMMove(fromR, fromC, toR, toC);
 		case C:
 		case C1:
 			return isCMove(fromR, fromC, toR, toC);
@@ -474,6 +454,18 @@ public class GameState {
 		case Z:
 		case Z1:
 			return isZMove(fromR, fromC, toR, toC);
+		case M:
+		case M1:
+			return isMMove(fromR, fromC, toR, toC);
+		case J:
+		case J1:
+			return isJMove(fromR, fromC, toR, toC);
+		case S:
+		case S1:
+			return isSMove(fromR, fromC, toR, toC);
+		case X:
+		case X1:
+			return isXMove(fromR, fromC, toR, toC);
 		}
 		
 		return false;
@@ -533,34 +525,6 @@ public class GameState {
 		setCurrSide(1-currSide);
 		return true;
 	}
-	public int getBit(int[] s, int r, int c){
-		return s[r] & colMask[c];
-	}
-	//reduce the search space by limiting new added piece to be 
-	//at most 1 squares away from the nearest other piece
-	public boolean isTooFar(int[] occupied, int r, int c){
-		int newPieceExpandedMap[] = new int[ROWS];
-		for(int i=0; i<ROWS; i++){
-			for(int j=0; j<COLS; j++){
-				if(((i-r)<2 && (i-r)>-2) && ((j-c)<2 && (j-c)>-2)){
-					newPieceExpandedMap[i] |= colMask[j];
-				}
-			}
-		}
-		//StringBuilder sb = new StringBuilder();
-		//sb.append("expanded:\n");
-		//for(int i=0; i<newPieceExpandedMap.length; i++){
-        //	sb.append(intToRow(newPieceExpandedMap[i])+"\n");
-        //}
-		//System.out.println(sb.toString());
-		
-		for(int i=0; i<ROWS; i++){
-			if((occupied[i] & newPieceExpandedMap[i])!=0)
-				return false;
-		}
-		
-		return true;
-	}
 
 	public List<Move> nextPossibleMoves(){
 		List<Move> nexts = new ArrayList<Move>();
@@ -578,7 +542,7 @@ public class GameState {
 						int to = i+J_MOVES[j];
 						int toR = to>>4;
 						int toC = to & 0xF;
-						if(isJMove(fromR, fromC, toR, toC)){
+						if(isValidMove(fromR, fromC, toR, toC)){
 							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
 						}
 					}
@@ -589,7 +553,7 @@ public class GameState {
 						int toC = fromC;
 						int to = (toR<<4) +toC;
 						if(state[to]==J || state[to]==J1){
-							if(isJMove(fromR, fromC, toR, toC)){
+							if(isValidMove(fromR, fromC, toR, toC)){
 								nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
 								break;
 							}
@@ -606,7 +570,7 @@ public class GameState {
 						int to = i+S_MOVES[j];
 						int toR = to>>4;
 						int toC = to & 0xF;
-						if(isSMove(fromR, fromC, toR, toC)){
+						if(isValidMove(fromR, fromC, toR, toC)){
 							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
 						}
 					}
@@ -621,7 +585,7 @@ public class GameState {
 						int to = i+X_MOVES[j];
 						int toR = to>>4;
 						int toC = to & 0xF;
-						if(isXMove(fromR, fromC, toR, toC)){
+						if(isValidMove(fromR, fromC, toR, toC)){
 							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
 						}
 					}
@@ -636,7 +600,7 @@ public class GameState {
 						int to = i+M_MOVES[j];
 						int toR = to>>4;
 						int toC = to & 0xF;
-						if(isMMove(fromR, fromC, toR, toC)){
+						if(isValidMove(fromR, fromC, toR, toC)){
 							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
 						}
 					}
@@ -652,7 +616,7 @@ public class GameState {
 						int toR = j;
 						int toC = fromC;	
 						int to 	= (toR<<4)+toC;
-						if(isCMove(fromR, fromC, toR, toC)){
+						if(isValidMove(fromR, fromC, toR, toC)){
 							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
 						}
 					}
@@ -661,7 +625,7 @@ public class GameState {
 						int toR = fromR;
 						int toC = j;	
 						int to 	= (toR<<4)+toC;
-						if(isCMove(fromR, fromC, toR, toC)){
+						if(isValidMove(fromR, fromC, toR, toC)){
 							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
 						}
 					}
@@ -677,7 +641,7 @@ public class GameState {
 						int toR = j;
 						int toC = fromC;	
 						int to 	= (toR<<4)+toC;
-						if(isPMove(fromR, fromC, toR, toC)){
+						if(isValidMove(fromR, fromC, toR, toC)){
 							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
 						}
 					}
@@ -686,7 +650,7 @@ public class GameState {
 						int toR = fromR;
 						int toC = j;	
 						int to 	= (toR<<4)+toC;
-						if(isPMove(fromR, fromC, toR, toC)){
+						if(isValidMove(fromR, fromC, toR, toC)){
 							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
 						}
 					}
@@ -701,7 +665,7 @@ public class GameState {
 						int to = i+J_MOVES[j];
 						int toR = to>>4;
 						int toC = to & 0xF;
-						if(isZMove(fromR, fromC, toR, toC)){
+						if(isValidMove(fromR, fromC, toR, toC)){
 							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
 						}
 					}
@@ -750,16 +714,6 @@ public class GameState {
 		return maxplayerTotal+minplayerTotal;
 	}
 	
-	//precon: a.length() == b.length() and a, b a bit strings
-	public String combineBitStrings(String a, String b){
-		char[] ac = a.toCharArray();
-		char[] bc = b.toCharArray();
-		for(int i=0; i<bc.length; i++){
-			if(bc[i]=='1') ac[i]='2';
-		}
-		return String.valueOf(ac);
-	}
-
 	public int isGameOver(){
 		int JCount = 0;
 		int J1Count = 0;

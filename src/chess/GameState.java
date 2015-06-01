@@ -13,8 +13,9 @@ public class GameState {
 	public static final int TIE = 2;
 	public static final int ROWS = 10;
 	public static final int COLS = 9;
-	public static final int VIRTUAL_COLS = 16;
+	public static final int HEX_COLS = 16;		//faster index access
 	public static final int PIECE_TYPES = 7;
+	public static final int SQUARE_STATES = PIECE_TYPES*2+1;	//for Zobrist Hashing
 	public static final int J	= 0;
 	public static final int S	= 1;
 	public static final int X	= 2;
@@ -29,7 +30,7 @@ public class GameState {
 	public static final int C1	= C+PIECE_TYPES;
 	public static final int P1	= P+PIECE_TYPES;
 	public static final int Z1	= Z+PIECE_TYPES;
-	public static final int UNOCCUPIED = 99;
+	public static final int UNOCCUPIED = Z1+1;
 	
 	//bounds
 	public static final int LBOUND_J	= 3;
@@ -48,15 +49,14 @@ public class GameState {
 	public static final int CROSS_Z1	= UBOUND_X1;
 	
 	//moves
-	public static final int[] J_MOVES = {VIRTUAL_COLS,-VIRTUAL_COLS, 1, -1};
-	public static final int[] S_MOVES = {VIRTUAL_COLS-1,VIRTUAL_COLS+1, -VIRTUAL_COLS-1, -VIRTUAL_COLS+1};
-	public static final int[] X_MOVES = {(VIRTUAL_COLS-1)*2,(VIRTUAL_COLS+1)*2, (-VIRTUAL_COLS-1)*2, (-VIRTUAL_COLS+1)*2};
-	public static final int[] M_MOVES = {VIRTUAL_COLS*2-1,VIRTUAL_COLS*2+1, -VIRTUAL_COLS*2-1, -VIRTUAL_COLS*2+1, VIRTUAL_COLS+2,-VIRTUAL_COLS+2, VIRTUAL_COLS-2, -VIRTUAL_COLS-2};
-	public static final int[] Z_MOVES = {VIRTUAL_COLS, 1, -1};
-	public static final int[] Z1_MOVES = {-VIRTUAL_COLS, 1, -1};
+	public static final int[] J_MOVES = {HEX_COLS,-HEX_COLS, 1, -1};
+	public static final int[] S_MOVES = {HEX_COLS-1,HEX_COLS+1, -HEX_COLS-1, -HEX_COLS+1};
+	public static final int[] X_MOVES = {(HEX_COLS-1)*2,(HEX_COLS+1)*2, (-HEX_COLS-1)*2, (-HEX_COLS+1)*2};
+	public static final int[] M_MOVES = {HEX_COLS*2-1,HEX_COLS*2+1, -HEX_COLS*2-1, -HEX_COLS*2+1, HEX_COLS+2,-HEX_COLS+2, HEX_COLS-2, -HEX_COLS-2};
+	public static final int[] Z_MOVES = {HEX_COLS, 1, -1};
+	public static final int[] Z1_MOVES = {-HEX_COLS, 1, -1};
 	
 	private int state[];	//[piece id]= location
-	private int occupied[];
 	private int currSide;
 	private int[] colMask;	//for extracting bit at specific column of a row
 	public class Move{
@@ -72,92 +72,96 @@ public class GameState {
 			toC   = tc;
 			rmPiec= rm;
 		}
+		@Override
+		public String toString(){
+			return "from("+fromC+","+fromR+") to("+toC+","+toR+")";
+		}
 	}
 	private Stack<Move> moves;
-	private static final int power[][][] = {
+	private static final int power[][] = {
 		{//0: jiang 
-			{0,	0,  0,  0,  0,  0,  0,  0,  0},
-			{0,	0,  0,  0,  0,  0,  0,  0,  0},
-			{0,	0,  0,  0,  0,  0,  0,  0,  0},
-			{0,	0,  0,  0,  0,  0,  0,  0,  0}, 
-			{0,	0,  0,  0,  0,  0,  0,  0,  0}, 
-			{0,	0,  0,  0,  0,  0,  0,  0,  0}, 
-			{0,	0,  0,  0,  0,  0,  0,  0,  0}, 
-			{0,	0,  0,  1,  1,  1,  0,  0,  0},
-			{0,	0,  0,  2,  2,  2,  0,  0,  0}, 
-			{0,	0,  0, 11, 15, 11,  0,  0,  0}
+			0,	0,  0,  0,  0,  0,  0,  0,  0,	0,0,0,0,0,0,0,
+			0,	0,  0,  0,  0,  0,  0,  0,  0,	0,0,0,0,0,0,0,
+			0,	0,  0,  0,  0,  0,  0,  0,  0,	0,0,0,0,0,0,0,
+			0,	0,  0,  0,  0,  0,  0,  0,  0,	0,0,0,0,0,0,0,
+			0,	0,  0,  0,  0,  0,  0,  0,  0,	0,0,0,0,0,0,0,
+			0,	0,  0,  0,  0,  0,  0,  0,  0,	0,0,0,0,0,0,0,
+			0,	0,  0,  0,  0,  0,  0,  0,  0,	0,0,0,0,0,0,0,
+			0,	0,  0,  1,  1,  1,  0,  0,  0,	0,0,0,0,0,0,0,
+			0,	0,  0,  2,  2,  2,  0,  0,  0,	0,0,0,0,0,0,0,
+			0,	0,  0, 11, 15, 11,  0,  0,  0,	0,0,0,0,0,0,0
 		},
 		{//1: shi
-			{0,  0,  0,  0,  0,  0,  0,  0,  0},  
-			{0,  0,  0,  0,  0,  0,  0,  0,  0},  
-			{0,  0,  0,  0,  0,  0,  0,  0,  0}, 
-			{0,  0,  0,  0,  0,  0,  0,  0,  0}, 
-			{0,  0,  0,  0,  0,  0,  0,  0,  0},  
-			{0,  0,  0,  0,  0,  0,  0,  0,  0},  
-			{0,  0,  0,  0,  0,  0,  0,  0,  0},  
-			{0,  0,  0, 20,  0, 20,  0,  0,  0},  
-			{0,  0,  0,  0, 23,  0,  0,  0,  0},  
-			{0,  0,  0, 20,  0, 20,  0,  0,  0}
+			0,  0,  0,  0,  0,  0,  0,  0,  0,	0,0,0,0,0,0,0,  
+			0,  0,  0,  0,  0,  0,  0,  0,  0,	0,0,0,0,0,0,0,  
+			0,  0,  0,  0,  0,  0,  0,  0,  0,	0,0,0,0,0,0,0, 
+			0,  0,  0,  0,  0,  0,  0,  0,  0,	0,0,0,0,0,0,0, 
+			0,  0,  0,  0,  0,  0,  0,  0,  0, 	0,0,0,0,0,0,0, 
+			0,  0,  0,  0,  0,  0,  0,  0,  0, 	0,0,0,0,0,0,0, 
+			0,  0,  0,  0,  0,  0,  0,  0,  0, 	0,0,0,0,0,0,0, 
+			0,  0,  0, 20,  0, 20,  0,  0,  0, 	0,0,0,0,0,0,0, 
+			0,  0,  0,  0, 23,  0,  0,  0,  0, 	0,0,0,0,0,0,0, 
+			0,  0,  0, 20,  0, 20,  0,  0,  0,	0,0,0,0,0,0,0
 		},
 		{//2: xiang
-			{0,  0,  0,  0,  0,  0,  0,  0,  0}, 
-			{0,  0,  0,  0,  0,  0,  0,  0,  0},  
-			{0,  0,  0,  0,  0,  0,  0,  0,  0},  
-			{0,  0,  0,  0,  0,  0,  0,  0,  0},  
-			{0,  0,  0,  0,  0,  0,  0,  0,  0},  
-			{0,  0, 20,  0,  0,  0, 20,  0,  0},  
-			{0,  0,  0,  0,  0,  0,  0,  0,  0},  
-		   {18,  0,  0,  0, 23,  0,  0,  0, 18},  
-			{0,  0,  0,  0,  0,  0,  0,  0,  0},  
-			{0,  0, 20,  0,  0,  0, 20,  0,  0}
+			0,  0,  0,  0,  0,  0,  0,  0,  0,	0,0,0,0,0,0,0, 
+			0,  0,  0,  0,  0,  0,  0,  0,  0,	0,0,0,0,0,0,0,  
+			0,  0,  0,  0,  0,  0,  0,  0,  0, 	0,0,0,0,0,0,0, 
+			0,  0,  0,  0,  0,  0,  0,  0,  0, 	0,0,0,0,0,0,0, 
+			0,  0,  0,  0,  0,  0,  0,  0,  0, 	0,0,0,0,0,0,0, 
+			0,  0, 20,  0,  0,  0, 20,  0,  0, 	0,0,0,0,0,0,0, 
+			0,  0,  0,  0,  0,  0,  0,  0,  0, 	0,0,0,0,0,0,0, 
+		   18,  0,  0,  0, 23,  0,  0,  0, 18, 	0,0,0,0,0,0,0, 
+			0,  0,  0,  0,  0,  0,  0,  0,  0, 	0,0,0,0,0,0,0, 
+			0,  0, 20,  0,  0,  0, 20,  0,  0,	0,0,0,0,0,0,0
 		},
 		{//3: ma
-			{90, 90, 90, 96, 90, 96, 90, 90, 90},  
-			{90, 96,103, 97, 94, 97,103, 96, 90},  
-			{92, 98, 99,103, 99,103, 99, 98, 92},  
-			{93,108,100,107,100,107,100,108, 93}, 
-			{90,100, 99,103,104,103, 99,100, 90}, 
-			{90, 98,101,102,103,102,101, 98, 90},  
-			{92, 94, 98, 95, 98, 95, 98, 94, 92},  
-			{93, 92, 94, 95, 92, 95, 94, 92, 93},  
-			{85, 90, 92, 93, 78, 93, 92, 90, 85},  
-			{88, 85, 90, 88, 90, 88, 90, 85, 88}
+			90, 90, 90, 96, 90, 96, 90, 90, 90,	0,0,0,0,0,0,0,  
+			90, 96,103, 97, 94, 97,103, 96, 90,	0,0,0,0,0,0,0,  
+			92, 98, 99,103, 99,103, 99, 98, 92,	0,0,0,0,0,0,0,  
+			93,108,100,107,100,107,100,108, 93,	0,0,0,0,0,0,0, 
+			90,100, 99,103,104,103, 99,100, 90,	0,0,0,0,0,0,0, 
+			90, 98,101,102,103,102,101, 98, 90,	0,0,0,0,0,0,0,  
+			92, 94, 98, 95, 98, 95, 98, 94, 92,	0,0,0,0,0,0,0,  
+			93, 92, 94, 95, 92, 95, 94, 92, 93,	0,0,0,0,0,0,0,  
+			85, 90, 92, 93, 78, 93, 92, 90, 85,	0,0,0,0,0,0,0,  
+			88, 85, 90, 88, 90, 88, 90, 85, 88,	0,0,0,0,0,0,0
 		},
 		{//4: che
-			{206,208,207,213,214,213,207,208,206},  
-			{206,212,209,216,233,216,209,212,206},  
-			{206,208,207,214,216,214,207,208,206},  
-			{206,213,213,216,216,216,213,213,206}, 
-			{208,211,211,214,215,214,211,211,208},  
-			{208,212,212,214,215,214,212,212,208},  
-			{204,209,204,212,214,212,204,209,204},  
-			{198,208,204,212,212,212,204,208,198},  
-			{200,208,206,212,200,212,206,208,200},  
-			{194,206,204,212,200,212,204,206,194}
+			206,208,207,213,214,213,207,208,206,0,0,0,0,0,0,0,  
+			206,212,209,216,233,216,209,212,206,0,0,0,0,0,0,0,  
+			206,208,207,214,216,214,207,208,206,0,0,0,0,0,0,0,  
+			206,213,213,216,216,216,213,213,206,0,0,0,0,0,0,0,
+			208,211,211,214,215,214,211,211,208,0,0,0,0,0,0,0,
+			208,212,212,214,215,214,212,212,208,0,0,0,0,0,0,0,
+			204,209,204,212,214,212,204,209,204,0,0,0,0,0,0,0,
+			198,208,204,212,212,212,204,208,198,0,0,0,0,0,0,0,
+			200,208,206,212,200,212,206,208,200,0,0,0,0,0,0,0,
+			194,206,204,212,200,212,204,206,194,0,0,0,0,0,0,0
 		},
 		{//5: pao
-		   {100,100, 96, 91, 90, 91, 96,100,100}, 
-			{98, 98, 96, 92, 89, 92, 96, 98, 98},  
-			{97, 97, 96, 91, 92, 91, 96, 97, 97}, 
-			{96, 99, 99, 98,100, 98, 99, 99, 96}, 
-			{96, 96, 96, 96,100, 96, 96, 96, 96}, 
-			{95, 96, 99, 96,100, 96, 99, 96, 95},  
-			{96, 96, 96, 96, 96, 96, 96, 96, 96},  
-			{97, 96,100, 99,101, 99,100, 96, 97}, 
-		    {96, 97, 98, 98, 98, 98, 98, 97, 96},  
-		    {96, 96, 97, 99, 99, 99, 97, 96, 96}
+		   100,100, 96, 91, 90, 91, 96,100,100,	0,0,0,0,0,0,0, 
+			98, 98, 96, 92, 89, 92, 96, 98, 98,	0,0,0,0,0,0,0,  
+			97, 97, 96, 91, 92, 91, 96, 97, 97,	0,0,0,0,0,0,0, 
+			96, 99, 99, 98,100, 98, 99, 99, 96,	0,0,0,0,0,0,0, 
+			96, 96, 96, 96,100, 96, 96, 96, 96,	0,0,0,0,0,0,0, 
+			95, 96, 99, 96,100, 96, 99, 96, 95,	0,0,0,0,0,0,0,  
+			96, 96, 96, 96, 96, 96, 96, 96, 96,	0,0,0,0,0,0,0,  
+			97, 96,100, 99,101, 99,100, 96, 97,	0,0,0,0,0,0,0, 
+		    96, 97, 98, 98, 98, 98, 98, 97, 96,	0,0,0,0,0,0,0,  
+		    96, 96, 97, 99, 99, 99, 97, 96, 96,	0,0,0,0,0,0,0
 		},
 		{//6: zu
-			 {9,  9,  9, 11, 13, 11,  9,  9,  9},
-			{19, 24, 34, 42, 44, 42, 34, 24, 19},  
-			{19, 24, 32, 37, 37, 37, 32, 24, 19},  
-			{19, 23, 27, 29, 30, 29, 27, 23, 19},  
-			{14, 18, 20, 27, 29, 27, 20, 18, 14},
-			{ 7,  0, 13,  0, 16,  0, 13,  0,  7}, 
-			{ 7,  0,  7,  0, 15,  0,  7,  0,  7},  
-			{ 0,  0,  0,  0,  0,  0,  0,  0,  0}, 
-			{ 0,  0,  0,  0,  0,  0,  0,  0,  0},  
-			{ 0,  0,  0,  0,  0,  0,  0,  0,  0}
+			 9,  9,  9, 11, 13, 11,  9,  9,  9,	0,0,0,0,0,0,0,
+			19, 24, 34, 42, 44, 42, 34, 24, 19,	0,0,0,0,0,0,0,  
+			19, 24, 32, 37, 37, 37, 32, 24, 19,	0,0,0,0,0,0,0,  
+			19, 23, 27, 29, 30, 29, 27, 23, 19,	0,0,0,0,0,0,0,  
+			14, 18, 20, 27, 29, 27, 20, 18, 14,	0,0,0,0,0,0,0,
+			 7,  0, 13,  0, 16,  0, 13,  0,  7,	0,0,0,0,0,0,0, 
+			 7,  0,  7,  0, 15,  0,  7,  0,  7,	0,0,0,0,0,0,0,  
+			 0,  0,  0,  0,  0,  0,  0,  0,  0,	0,0,0,0,0,0,0, 
+			 0,  0,  0,  0,  0,  0,  0,  0,  0,	0,0,0,0,0,0,0,  
+			 0,  0,  0,  0,  0,  0,  0,  0,  0,	0,0,0,0,0,0,0
 		}
 	};
 
@@ -185,11 +189,8 @@ public class GameState {
 	public int[] getGameState() {
 		return state;
 	}
-	public int[] getOccupied(){
-		return occupied;
-	}
 	public void initState(){
-		state = new int[ROWS*VIRTUAL_COLS];	//store piece idx
+		state = new int[ROWS*HEX_COLS];	//store piece idx
 											//VIRTUAL_COLS = 16 instead of 9. 
 											//Accessing up/down cells become 4-bits shift
 											//Checking out-of-bound become a single & operation
@@ -203,15 +204,15 @@ public class GameState {
 		//5: che	
 		//6: pao	
 		//7: zu		
-		state[0*VIRTUAL_COLS+0] = C;	state[0*VIRTUAL_COLS+1] = M;	state[0*VIRTUAL_COLS+2] = X;	state[0*VIRTUAL_COLS+3] = S;	state[0*VIRTUAL_COLS+4] = J;	state[0*VIRTUAL_COLS+5] = S;	state[0*VIRTUAL_COLS+6] = X;	state[0*VIRTUAL_COLS+7] = M;	state[0*VIRTUAL_COLS+8] = C;
+		state[0*HEX_COLS+0] = C;	state[0*HEX_COLS+1] = M;	state[0*HEX_COLS+2] = X;	state[0*HEX_COLS+3] = S;	state[0*HEX_COLS+4] = J;	state[0*HEX_COLS+5] = S;	state[0*HEX_COLS+6] = X;	state[0*HEX_COLS+7] = M;	state[0*HEX_COLS+8] = C;
 		
-										state[2*VIRTUAL_COLS+1] = P;																																									state[2*VIRTUAL_COLS+7] = P;
-		state[3*VIRTUAL_COLS+0] = Z;						state[3*VIRTUAL_COLS+2] = Z;						state[3*VIRTUAL_COLS+4] = Z;						state[3*VIRTUAL_COLS+6] = Z;						state[3*VIRTUAL_COLS+8] = Z;
+										state[2*HEX_COLS+1] = P;																																									state[2*HEX_COLS+7] = P;
+		state[3*HEX_COLS+0] = Z;						state[3*HEX_COLS+2] = Z;						state[3*HEX_COLS+4] = Z;						state[3*HEX_COLS+6] = Z;						state[3*HEX_COLS+8] = Z;
 		
-		state[6*VIRTUAL_COLS+0] = Z1;						state[6*VIRTUAL_COLS+2] = Z1;						state[6*VIRTUAL_COLS+4] = Z1;						state[6*VIRTUAL_COLS+6] = Z1;						state[6*VIRTUAL_COLS+8] = Z1;
-							state[7*VIRTUAL_COLS+1] = P1;																										state[7*VIRTUAL_COLS+7] = P1;
+		state[6*HEX_COLS+0] = Z1;						state[6*HEX_COLS+2] = Z1;						state[6*HEX_COLS+4] = Z1;						state[6*HEX_COLS+6] = Z1;						state[6*HEX_COLS+8] = Z1;
+							state[7*HEX_COLS+1] = P1;																										state[7*HEX_COLS+7] = P1;
 							
-		state[9*VIRTUAL_COLS+0] = C1;	state[9*VIRTUAL_COLS+1] = M1;	state[9*VIRTUAL_COLS+2] = X1;	state[9*VIRTUAL_COLS+3] = S1;	state[9*VIRTUAL_COLS+4] = J1;	state[9*VIRTUAL_COLS+5] = S1;	state[9*VIRTUAL_COLS+6] = X1;	state[9*VIRTUAL_COLS+7] = M1;	state[9*VIRTUAL_COLS+8] = C1;
+		state[9*HEX_COLS+0] = C1;	state[9*HEX_COLS+1] = M1;	state[9*HEX_COLS+2] = X1;	state[9*HEX_COLS+3] = S1;	state[9*HEX_COLS+4] = J1;	state[9*HEX_COLS+5] = S1;	state[9*HEX_COLS+6] = X1;	state[9*HEX_COLS+7] = M1;	state[9*HEX_COLS+8] = C1;
 	}
 	/*
 	//virtual gameboard rows = ROWS, cols = 16
@@ -272,16 +273,41 @@ public class GameState {
 	}
 	*/
 	public boolean isJMove(int fromR, int fromC, int toR, int toC){
+		if(isOOB(toR, toC)) return false;
 		int toPiece = state[(toR<<4)+toC];
 		
 		if(currSide == MIN_PLAYER){
 			//if attacking
-			if(toPiece == J && fromC == toC) return true;
+			if(toPiece == J && fromC == toC){
+				//check nothing between fromR & toR
+				if(fromR<toR){
+					for(int i=fromR+1; i<toR; i++){
+						if(state[(i<<4)+fromC]!=UNOCCUPIED) return false;
+					}
+				}else{
+					for(int i=toR+1; i<fromR; i++){
+						if(state[(i<<4)+fromC]!=UNOCCUPIED) return false;
+					}
+				}
+				return true;
+			}
 			
 			if(toR<UBOUND_J1 || toR>DBOUND_J1 || toC<LBOUND_J ||  toC>RBOUND_J) return false;
 		}else{
 			//if attacking
-			if(toPiece == J1 && fromC == toC) return true;
+			if(toPiece == J1 && fromC == toC){
+				//check nothing between fromR & toR
+				if(fromR<toR){
+					for(int i=fromR+1; i<toR; i++){
+						if(state[(i<<4)+fromC]!=UNOCCUPIED) return false;
+					}
+				}else{
+					for(int i=toR+1; i<fromR; i++){
+						if(state[(i<<4)+fromC]!=UNOCCUPIED) return false;
+					}
+				}
+				return true;
+			}
 			
 			if(toR<UBOUND_J  || toR>DBOUND_J  || toC<LBOUND_J ||  toC>RBOUND_J) return false;
 		}
@@ -292,6 +318,7 @@ public class GameState {
 		return false;
 	}
 	public boolean isSMove(int fromR, int fromC, int toR, int toC){
+		if(isOOB(toR, toC)) return false;
 		if(currSide == MIN_PLAYER){
 			if(toR<UBOUND_J1 || toR>DBOUND_J1 || toC<LBOUND_J ||  toC>RBOUND_J) return false;
 		}else{
@@ -304,6 +331,7 @@ public class GameState {
 		return false;
 	}
 	public boolean isXMove(int fromR, int fromC, int toR, int toC){
+		if(isOOB(toR, toC)) return false;
 		if(currSide == MIN_PLAYER){
 			if(toR<UBOUND_X1 || toR>DBOUND_X1 || toC<LBOUND_X ||  toC>RBOUND_X) return false;
 		}else{
@@ -317,6 +345,7 @@ public class GameState {
 		return false;
 	}
 	public boolean isMMove(int fromR, int fromC, int toR, int toC){
+		if(isOOB(toR, toC)) return false;
 		int diff = ((toR-fromR)<<4)+toC-fromC;
 		for(int i=0; i<M_MOVES.length; i++){
 			int delta = J_MOVES[i>>1];
@@ -325,6 +354,7 @@ public class GameState {
 		return false;
 	}
 	public boolean isCMove(int fromR, int fromC, int toR, int toC){
+		if(isOOB(toR, toC)) return false;
 		if (fromR == toR){
 			//check nothing between fromC & toC
 			if(fromC<toC){
@@ -354,6 +384,7 @@ public class GameState {
 		}
 	}
 	public boolean isPMove(int fromR, int fromC, int toR, int toC){
+		if(isOOB(toR, toC)) return false;
 		//if attacking
 		int toPiece = state[(toR<<4)+toC];
 		if(toPiece/PIECE_TYPES==(1-currSide)){
@@ -395,6 +426,7 @@ public class GameState {
 		
 	}
 	public boolean isZMove(int fromR, int fromC, int toR, int toC){
+		if(isOOB(toR, toC)) return false;
 		int diff = ((toR-fromR)<<4)+toC-fromC;
 		int mvLim = Z_MOVES.length;
 		if(currSide == MIN_PLAYER){
@@ -412,13 +444,14 @@ public class GameState {
 	}
 	public boolean isValidMove(int fromR, int fromC, int toR, int toC){
 		if(isOOB(toR,toC))	return false;
-		int piece = state[(toR<<4)+toC];
+		int to = (toR<<4)+toC;
+		int piece = state[to];
 		if(piece>=0){
 			if(piece/PIECE_TYPES == currSide) return false;
 		}
-		
+		int from= (fromR<<4)+fromC;
 		//identify piece type
-		int pieceType = state[(fromR<<4)+fromC];
+		int pieceType = state[from];
 		switch(pieceType){
 		case J:
 		case J1:
@@ -448,11 +481,12 @@ public class GameState {
 	public boolean isValidSelection(int r, int c){
 		if(isOOB(r,c))	return false;
 		int piece = state[(r<<4)+c];
-		if(piece==UNOCCUPIED)	return false;
-		if(piece/PIECE_TYPES != currSide) return false;
-		return true;
+		if(piece/PIECE_TYPES == currSide) return true;
+		return false;
 	}
 	public boolean isOOB(int r, int c){
+		//int idx = (r<<4)+c;
+		//if((idx>>4)<ROWS && ((idx & 0xF)<=8)) return false;
 		if(r<0 || r>=ROWS || c<0 ||c>=COLS) return true;
 		return false;
 	}
@@ -466,12 +500,16 @@ public class GameState {
 	}
 	//precon: is valid move
 	public boolean makeMove(Move m){
-		m.toR = state[(m.fromR<<4)+m.fromC];
-		if(m.toR == m.toC) return false;
-		state[(m.fromR<<4)+m.fromC]  = m.toC;
+		
+		//this should not happen
+		if(m.rmPiec!=state[(m.toR<<4)+m.toC]){
+			System.out.println("move inconsistent.");
+			return false;
+		}
+		
+		state[(m.toR<<4)+m.toC]  = state[(m.fromR<<4)+m.fromC];
+		state[(m.fromR<<4)+m.fromC]  = UNOCCUPIED;
 		moves.add(m);
-		occupied[m.toR] = 0;
-		occupied[m.toC] = 1;
 		setCurrSide(1-currSide);
 		return true;
 	}
@@ -524,23 +562,184 @@ public class GameState {
 		return true;
 	}
 
-
 	public List<Move> nextPossibleMoves(){
 		List<Move> nexts = new ArrayList<Move>();
 		if(isGameOver()!=-1) return nexts;
-		
+		for(int i=0; i<state.length; i++){
+			int pieceType = state[i];
+			if((pieceType/PIECE_TYPES)!=currSide) continue;
+			switch(pieceType){
+			case J:
+			case J1:
+				{
+					int fromR = i>>4;
+					int fromC = i & 0xF;
+					for(int j=0; j<J_MOVES.length;j++){
+						int to = i+J_MOVES[j];
+						int toR = to>>4;
+						int toC = to & 0xF;
+						if(isJMove(fromR, fromC, toR, toC)){
+							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
+						}
+					}
+					//also check along col for possible J-J-kill
+					for(int j=0; j<ROWS; j++){
+						if(j==fromR) continue;
+						int toR = j;
+						int toC = fromC;
+						int to = (toR<<4) +toC;
+						if(state[to]==J || state[to]==J1){
+							if(isJMove(fromR, fromC, toR, toC)){
+								nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
+								break;
+							}
+						}
+					}
+				}
+				break;
+			case S:
+			case S1:
+				{
+					int fromR = i>>4;
+					int fromC = i & 0xF;
+					for(int j=0; j<S_MOVES.length;j++){
+						int to = i+S_MOVES[j];
+						int toR = to>>4;
+						int toC = to & 0xF;
+						if(isSMove(fromR, fromC, toR, toC)){
+							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
+						}
+					}
+				}
+				break;
+			case X:
+			case X1:
+				{
+					int fromR = i>>4;
+					int fromC = i & 0xF;
+					for(int j=0; j<X_MOVES.length;j++){
+						int to = i+X_MOVES[j];
+						int toR = to>>4;
+						int toC = to & 0xF;
+						if(isXMove(fromR, fromC, toR, toC)){
+							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
+						}
+					}
+				}
+				break;
+			case M:
+			case M1:
+				{
+					int fromR = i>>4;
+					int fromC = i & 0xF;
+					for(int j=0; j<M_MOVES.length;j++){
+						int to = i+M_MOVES[j];
+						int toR = to>>4;
+						int toC = to & 0xF;
+						if(isMMove(fromR, fromC, toR, toC)){
+							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
+						}
+					}
+				}
+				break;
+			case C:
+			case C1:
+				{
+					int fromR = i>>4;
+					int fromC = i & 0xF;
+					//move along row
+					for(int j=0; j<ROWS; j++){
+						int toR = j;
+						int toC = fromC;	
+						int to 	= (toR<<4)+toC;
+						if(isCMove(fromR, fromC, toR, toC)){
+							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
+						}
+					}
+					//move along col
+					for(int j=0; j<COLS; j++){
+						int toR = fromR;
+						int toC = j;	
+						int to 	= (toR<<4)+toC;
+						if(isCMove(fromR, fromC, toR, toC)){
+							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
+						}
+					}
+				}
+				break;
+			case P:
+			case P1:
+				{
+					int fromR = i>>4;
+					int fromC = i & 0xF;
+					//move along row
+					for(int j=0; j<ROWS; j++){
+						int toR = j;
+						int toC = fromC;	
+						int to 	= (toR<<4)+toC;
+						if(isPMove(fromR, fromC, toR, toC)){
+							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
+						}
+					}
+					//move along col
+					for(int j=0; j<COLS; j++){
+						int toR = fromR;
+						int toC = j;	
+						int to 	= (toR<<4)+toC;
+						if(isPMove(fromR, fromC, toR, toC)){
+							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
+						}
+					}
+				}
+				break;
+			case Z:
+			case Z1:
+				{
+					int fromR = i>>4;
+					int fromC = i & 0xF;
+					for(int j=0; j<J_MOVES.length;j++){	//use JMOVE instead of Z/Z1MOVE to avoid determing Z or Z1
+						int to = i+J_MOVES[j];
+						int toR = to>>4;
+						int toC = to & 0xF;
+						if(isZMove(fromR, fromC, toR, toC)){
+							nexts.add(new Move(fromR, fromC, toR, toC, state[to]));
+						}
+					}
+				}
+				break;
+			}
+		}
+
 		return nexts;
 		
 	}
 	
 	public int evaluate(){
-		
-	
-		int maxplayerTotal = 0;
-		int minplayerTotal = 0;
-		
-		
-		return maxplayerTotal+minplayerTotal;//maxplayerTotal/5*2+minplayerTotal/5*3;
+		int over = isGameOver();
+		if(over == -1){
+			int maxplayerTotal = 0;
+			int minplayerTotal = 0;
+			
+			for(int i=0; i<state.length; i++){
+				int pieceType = state[i];
+				if(pieceType!=UNOCCUPIED){
+					if(pieceType<PIECE_TYPES){
+						//max player, flip vertically
+						int r = i>>4;
+						int c = i & 0xF;
+						int rf = ROWS-1-r;
+						maxplayerTotal+=power[pieceType][(rf<<4)+c];
+					}else{
+						minplayerTotal+=power[pieceType-PIECE_TYPES][i];
+					}
+				}
+			}
+			return maxplayerTotal-minplayerTotal;
+		}else if(over == MAX_PLAYER){
+			return MAX_STATE_VALUE;
+		}else{
+			return MIN_STATE_VALUE;
+		}
 
 	}
 	
@@ -584,7 +783,6 @@ public class GameState {
 	@Override
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
-		
 		sb.append("game value ="+evaluate());
 		return sb.toString();
 	}

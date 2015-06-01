@@ -84,7 +84,7 @@ public class MainUI extends JPanel{
 	   GameState.Move nextBestMove = agent.nextMove();
 	   long end = System.currentTimeMillis();
 	   System.out.println("ai move = "+nextBestMove+" move calculation time = "+(end-start)/1000.0+" s");
-	   //gameState.makeMove((int)nextBestMove.getX(), (int)nextBestMove.getY());
+	   gameState.makeMove(nextBestMove);
    }
    @Override
    public void paint (Graphics g) {
@@ -128,7 +128,7 @@ public class MainUI extends JPanel{
 		   }
 
 	   }
-	   System.out.println("currside = "+gameState.getCurrSide());
+	  System.out.println(gameState);
 	  
    }
    
@@ -144,11 +144,11 @@ public class MainUI extends JPanel{
 	  });
 	  mainFrame.addMouseListener(new MouseAdapter() {
 	     public void mousePressed(MouseEvent e) {
-	    	//if(gameboard.gameState.getCurrSide()!=gameboard.gameState.MAX_PLAYER){
-	    	//	return;
-	    	//}else{
+	    	if(gameboard.gameState.getCurrSide()!=gameboard.gameState.MIN_PLAYER){
+	    		return;
+	    	}else{
 		        Point p = gameboard.posOnGrid(e.getPoint());
-		        System.out.println("mouse click "+p);
+		        
 		        if(gameboard.waitForSelection){
 		        	if(gameboard.gameState.isValidSelection((int) p.getY(), (int) p.getX())){
 			        	gameboard.selectedPos = p;
@@ -157,6 +157,7 @@ public class MainUI extends JPanel{
 		        }else{
 		        	if(gameboard.gameState.isValidMove((int) gameboard.selectedPos.getY(), (int) gameboard.selectedPos.getX(), (int) p.getY(), (int) p.getX())){
 		        		gameboard.gameState.makeMove((int) gameboard.selectedPos.getY(), (int) gameboard.selectedPos.getX(), (int) p.getY(), (int)p.getX());
+		        		System.out.println("player move = "+gameboard.gameState.getMoves().peek());
 		        		int over = gameboard.gameState.isGameOver();
 				        if(over!=-1){
 				        	String message;
@@ -168,13 +169,27 @@ public class MainUI extends JPanel{
 				        	{
 				        		gameboard.newGame();
 				        	}
+				        }else{
+				        	gameboard.agentMove();
+				        	over = gameboard.gameState.isGameOver();
+				        	if(over!=-1){
+					        	String message;
+					        	if(over==gameboard.gameState.MAX_PLAYER) message = "Black Win";
+					        	else if(over==gameboard.gameState.MIN_PLAYER) message = "Red Win";
+					        	else message = "Tie";
+					        	int input = JOptionPane.showOptionDialog(mainFrame, message, "Message",JOptionPane.OK_OPTION, JOptionPane.INFORMATION_MESSAGE,null,null,null);
+					        	if(input == JOptionPane.OK_OPTION)
+					        	{
+					        		gameboard.newGame();
+					        	}
+					        }
 				        }
 		        	}
 		        	gameboard.selectedPos = null;
 		        	gameboard.waitForSelection = true;
 		        }
 		        gameboard.repaint();
-	     	//}
+	     	}
 	     }
 	  });
 	  

@@ -5,7 +5,7 @@ import java.util.Random;
 public class ZobristHash {
 	private int ROWS;
 	private int COLS;
-	private int [][] hashtable; //[][0] = maxPlayer, [][1] = min player, [][2] = empty
+	private int [][] hashtable; 
 	public ZobristHash(int rows, int cols, int gamesquareStates){
 		ROWS = rows;
 		COLS = cols;
@@ -25,26 +25,11 @@ public class ZobristHash {
 	//currently this hashfunction is hardcoded
 	public int hash(GameState s){
 		int hashValue = 0;
-		/*
+		
 		int[] state = s.getGameState();
-		int[] maxState = state[s.MAX_PLAYER];
-		int[] minState = state[s.MIN_PLAYER];
-		
-		for(int r=0; r<ROWS; r++){
-			for(int c=0; c<COLS; c++){
-				int maxPlayerBit = s.getBit(maxState, r, c);
-				int minPlayerBit = s.getBit(minState, r, c);
-				if(maxPlayerBit==0 && minPlayerBit==0){
-					hashValue ^= hashtable[r*COLS+c][2];
-				}else if (maxPlayerBit!=0){
-					hashValue ^= hashtable[r*COLS+c][0];
-				}else{
-					hashValue ^= hashtable[r*COLS+c][1];
-				}
-			}
+		for(int i=0; i<state.length; i++){
+			hashValue ^= hashtable[i][state[i]];
 		}
-		*/
-		
 		return hashValue;
 	}
 }

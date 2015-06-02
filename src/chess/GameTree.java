@@ -32,7 +32,8 @@ public class GameTree {
 	}
 	private class TreeNode{
 		public GameState.Move nextMove;
-		public int moveCount;
+		//public int moveCount;
+		//public int[] livePieces;
 		public int v;
 		public int searchDepth;
 	}
@@ -116,21 +117,33 @@ public class GameTree {
 	}
 	
 	public GameState.Move nextMove(){
-		
+		/*
 		//clean outdated hash
 		int outdatedCount = 0;
-		int currTotalMoveCount = currState.getMoves().size();
+		
+		int livePieces[] = currState.getLivePieces();
+		//int currTotalMoveCount = currState.getMoves().size();
 		
 		Iterator<Map.Entry<Integer, TreeNode>> it = hm.entrySet().iterator();
 		while(it.hasNext()){
 			Map.Entry<Integer, TreeNode> entry = it.next();
-			if(entry.getValue().moveCount<currTotalMoveCount){
-				it.remove();
-				outdatedCount++;
+			int[] entryLivePieces = entry.getValue().livePieces;
+			for(int i=0; i<entryLivePieces.length-1; i++){
+				
+				if(entryLivePieces[i]>livePieces[i]){
+					it.remove();
+					outdatedCount++;
+					break;
+				}
 			}
+			//if(entry.getValue().moveCount<currTotalMoveCount){
+			//	it.remove();
+			//	outdatedCount++;
+			//}
 		}
 		System.out.println("cleared outdated hash = "+outdatedCount+" current hash size = "+hm.size());
-		
+		*/
+		hm = new HashMap<Integer, TreeNode>();
 
 		hmQuerySuccessfulCount = 0;
 		maxDepthReached = 0;
@@ -151,6 +164,7 @@ public class GameTree {
 		
 		System.out.println("Reuse saved nodes = "+hmQuerySuccessfulCount+"/"+hm.size()+" max depth reached = "+maxDepthReached+" average branching = "+branchesCount/nodesVisitedCount);
 		System.out.println("sorting time = "+totalSortingTime/1000.0+" s");
+		hm = null;	//this would immediately trigger garbage collection to release memory
 		return bestNext.nextMove;
 	}
 	public List<GameState.Move> sortMoves(GameState curr, List<GameState.Move> nextPossibleMoves, int side){
@@ -201,7 +215,7 @@ public class GameTree {
 		
 		long start = System.currentTimeMillis();
 		//order search by resultant state value
-		//nextPossibleMoves = sortMoves(curr, nextPossibleMoves, curr.getCurrSide());
+		nextPossibleMoves = sortMoves(curr, nextPossibleMoves, curr.getCurrSide());
 		long end = System.currentTimeMillis();
 		totalSortingTime += end-start;
 		
@@ -213,11 +227,13 @@ public class GameTree {
 		}
 		
 		TreeNode root = new TreeNode();	//the node to return
+		//root.livePieces = new int[curr.getLivePieces().length];
 		GameState.Move selectedMove = null;		//the state selected
 		int selectedSearchDepth = 0;
 		if(nextPossibleMoves.size()==0){
 			root.nextMove = null;
-			root.moveCount = curr.getMoves().size();
+			//System.arraycopy(curr.getLivePieces(), 0, root.livePieces, 0, root.livePieces.length);
+			curr.getLivePieces().clone();
 			root.v=curr.evaluate();
 			root.searchDepth = Integer.MAX_VALUE;
 		}
@@ -239,7 +255,7 @@ public class GameTree {
 				if(nullMoveBestNext.v>=beta || nullMoveBestNext.v==GameState.MAX_STATE_VALUE){
 					//System.out.println("null move pruning successful at depth = "+depth);
 					root.nextMove = null;
-					root.moveCount = curr.getMoves().size()+1;
+					//System.arraycopy(curr.getLivePieces(), 0, root.livePieces, 0, root.livePieces.length);
 					root.v = nullMoveBestNext.v;
 					root.searchDepth = Math.max(depth, nullMoveBestNext.searchDepth);
 					if(ENABLE_HASH){
@@ -290,7 +306,7 @@ public class GameTree {
 				if(currTime - startTime > timeLim) break;
 			}
 			root.nextMove = selectedMove;
-			root.moveCount = curr.getMoves().size()+1;
+			//System.arraycopy(curr.getLivePieces(), 0, root.livePieces, 0, root.livePieces.length);
 			root.v = max;
 			root.searchDepth = selectedSearchDepth;
 			
@@ -309,7 +325,7 @@ public class GameTree {
 				if(nullMoveBestNext.v<=alpha || nullMoveBestNext.v==GameState.MIN_STATE_VALUE){
 					//System.out.println("null move pruning successful at depth = "+depth);
 					root.nextMove = null;
-					root.moveCount = curr.getMoves().size()+1;
+					//System.arraycopy(curr.getLivePieces(), 0, root.livePieces, 0, root.livePieces.length);
 					root.v = nullMoveBestNext.v;
 					root.searchDepth = Math.max(depth, nullMoveBestNext.searchDepth);
 					if(ENABLE_HASH){
@@ -358,16 +374,13 @@ public class GameTree {
 				if(currTime - startTime > timeLim) break;
 			}
 			root.nextMove = selectedMove;
-			root.moveCount = curr.getMoves().size()+1;
+			//System.arraycopy(curr.getLivePieces(), 0, root.livePieces, 0, root.livePieces.length);
 			root.v = min;
 			root.searchDepth = selectedSearchDepth;
 			
 		}
 		if(ENABLE_HASH){
 			hm.put(hasher.hash(curr), root);
-		}
-		if(debug == true){
-			System.out.println(root.nextMove+" value = "+root.v+" depth = "+root.searchDepth+" movecount = "+root.moveCount);
 		}
 		return root;
 	}

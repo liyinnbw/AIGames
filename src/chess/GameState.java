@@ -167,7 +167,13 @@ public class GameState {
 
 	
 	
-	
+	public int[] getLivePieces(){
+		int livePieces[] = new int[(PIECE_TYPES<<1)+1];
+		for(int i=0; i<state.length; i++){
+			livePieces[state[i]]++;
+		}
+		return livePieces;
+	}
 
 	public Stack<Move> getMoves() {
 		return moves;

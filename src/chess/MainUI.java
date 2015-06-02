@@ -28,7 +28,7 @@ public class MainUI extends JPanel{
    public int selectedPieceIdx;
    public boolean waitForSelection;
    public MainUI(){
-	   SEARCH_TIME = 3000; //miliseconds
+	   SEARCH_TIME = 5000; //miliseconds
 	   newGame();
 	   initChessImages();
    }

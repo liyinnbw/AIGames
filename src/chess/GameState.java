@@ -195,6 +195,10 @@ public class GameState {
 	public int[] getGameState() {
 		return state;
 	}
+	public void setState(int s[]){
+		state = new int[s.length];
+		System.arraycopy(s, 0, state, 0, s.length);
+	}
 	public void initState(){
 		state = new int[ROWS*HEX_COLS];	//store piece idx
 										//use HEX_COLS = 16 instead of COLS=9. 
@@ -445,7 +449,7 @@ public class GameState {
 		if(isOOB(toR,toC))	return false;
 		int to = (toR<<4)+toC;
 		int piece = state[to];
-		if(piece>=0){
+		if(piece!=UNOCCUPIED){
 			if(piece/PIECE_TYPES == currSide) return false;
 		}
 		int from= (fromR<<4)+fromC;

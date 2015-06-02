@@ -19,6 +19,7 @@ public class MainUI extends JPanel{
    public static final int Y_OFFSET = 30;
    public int SEARCH_TIME;	//in miliseconds
    public static final int PIECE_TYPES = 7;
+   public static int startSide;
    public GameState gameState;
    public GameTree agent;
    public Image[][] chessImgs;
@@ -32,7 +33,8 @@ public class MainUI extends JPanel{
 	   initChessImages();
    }
    private void newGame(){
-	   gameState = new GameState(GRID_ROWS,GRID_COLS,GameState.MIN_PLAYER);
+	   startSide = GameState.MIN_PLAYER;
+	   gameState = new GameState(GRID_ROWS,GRID_COLS,startSide);
 	   agent = new GameTree(gameState, SEARCH_TIME);
 	   selectedPos = null;
 	   selectedPieceType = -1;
@@ -80,11 +82,15 @@ public class MainUI extends JPanel{
 	   return pos;
    }
    public void agentMove(){
-	   long start = System.currentTimeMillis();
-	   GameState.Move nextBestMove = agent.nextMove();
-	   long end = System.currentTimeMillis();
-	   System.out.println("ai move = "+nextBestMove+" move calculation time = "+(end-start)/1000.0+" s");
-	   gameState.makeMove(nextBestMove);
+	   if(gameState.getCurrSide()==startSide){
+		   return;
+	   }else{
+		   long start = System.currentTimeMillis();
+		   GameState.Move nextBestMove = agent.nextMove();
+		   long end = System.currentTimeMillis();
+		   System.out.println("ai move = "+nextBestMove+" move calculation time = "+(end-start)/1000.0+" s");
+		   gameState.makeMove(nextBestMove);
+	   }
    }
    @Override
    public void paint (Graphics g) {
@@ -144,7 +150,7 @@ public class MainUI extends JPanel{
 	  });
 	  mainFrame.addMouseListener(new MouseAdapter() {
 	     public void mousePressed(MouseEvent e) {
-	    	if(gameboard.gameState.getCurrSide()!=gameboard.gameState.MIN_PLAYER){
+	    	if(gameboard.gameState.getCurrSide()!=gameboard.startSide){
 	    		return;
 	    	}else{
 		        Point p = gameboard.posOnGrid(e.getPoint());
@@ -153,6 +159,8 @@ public class MainUI extends JPanel{
 		        	if(gameboard.gameState.isValidSelection((int) p.getY(), (int) p.getX())){
 			        	gameboard.selectedPos = p;
 			        	gameboard.waitForSelection = false;
+		        	}else{
+		        		return;
 		        	}
 		        }else{
 		        	if(gameboard.gameState.isValidMove((int) gameboard.selectedPos.getY(), (int) gameboard.selectedPos.getX(), (int) p.getY(), (int) p.getX())){
@@ -198,7 +206,7 @@ public class MainUI extends JPanel{
 			  if(e.getKeyCode()==KeyEvent.VK_BACK_SPACE){
 				  System.out.println("revert move");
 				  gameboard.gameState.revertOneMove();
-				  if(gameboard.gameState.getCurrSide()==GameState.MAX_PLAYER){
+				  if(gameboard.gameState.getCurrSide()!=gameboard.startSide){
 					  gameboard.gameState.revertOneMove();
 				  }
 				  gameboard.repaint();

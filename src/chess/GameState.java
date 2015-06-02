@@ -49,12 +49,12 @@ public class GameState {
 	public static final int CROSS_Z1	= UBOUND_X1;
 	
 	//moves
-	public static final int[] J_MOVES = {HEX_COLS,-HEX_COLS, 1, -1};
-	public static final int[] S_MOVES = {HEX_COLS-1,HEX_COLS+1, -HEX_COLS-1, -HEX_COLS+1};
-	public static final int[] X_MOVES = {(HEX_COLS-1)*2,(HEX_COLS+1)*2, (-HEX_COLS-1)*2, (-HEX_COLS+1)*2};
-	public static final int[] M_MOVES = {HEX_COLS*2-1,HEX_COLS*2+1, -HEX_COLS*2-1, -HEX_COLS*2+1, HEX_COLS+2,-HEX_COLS+2, HEX_COLS-2, -HEX_COLS-2};
-	public static final int[] Z_MOVES = {HEX_COLS, 1, -1};
-	public static final int[] Z1_MOVES = {-HEX_COLS, 1, -1};
+	public static final int[] J_MOVES 	= {HEX_COLS,-HEX_COLS, 1, -1};
+	public static final int[] S_MOVES 	= {HEX_COLS-1,HEX_COLS+1, -HEX_COLS-1, -HEX_COLS+1};
+	public static final int[] X_MOVES 	= {(HEX_COLS-1)*2,(HEX_COLS+1)*2, (-HEX_COLS-1)*2, (-HEX_COLS+1)*2};
+	public static final int[] M_MOVES 	= {HEX_COLS*2-1,HEX_COLS*2+1, -HEX_COLS*2-1, -HEX_COLS*2+1, HEX_COLS+2,-HEX_COLS+2, HEX_COLS-2, -HEX_COLS-2};
+	public static final int[] Z_MOVES 	= {HEX_COLS, 1, -1};
+	public static final int[] Z1_MOVES 	= {-HEX_COLS, 1, -1};
 	
 	private int state[];	//[piece id]= location
 	private int currSide;
@@ -197,7 +197,7 @@ public class GameState {
 	}
 	public void initState(){
 		state = new int[ROWS*HEX_COLS];	//store piece idx
-										//VIRTUAL_COLS = 16 instead of 9. 
+										//use HEX_COLS = 16 instead of COLS=9. 
 										//Accessing up/down cells become 4-bits shift
 
 		for(int i=0; i<state.length; i++){
@@ -743,6 +743,12 @@ public class GameState {
 	@Override
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
+		//for(int i=0; i<state.length; i++){
+		//	sb.append(state[i]+"\t");
+		//	if((i & 0xF)==0xF){
+		//		sb.append("\n");
+		//	}
+		//}
 		sb.append("game value ="+evaluate());
 		return sb.toString();
 	}

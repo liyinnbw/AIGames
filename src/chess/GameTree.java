@@ -32,7 +32,6 @@ public class GameTree {
 	}
 	private class TreeNode{
 		public GameState.Move nextMove;
-		//public int moveCount;
 		//public int[] livePieces;
 		public int v;
 		public int searchDepth;
@@ -156,7 +155,9 @@ public class GameTree {
 		startTime = System.currentTimeMillis();
 		for(int depth = 1; ; depth++){
 			depthLim = depth;
-			bestNext = minMaxAlphaBeta(currState,depth-1,0-Integer.MAX_VALUE, Integer.MAX_VALUE, true);
+			int alpha 	= -Integer.MAX_VALUE;
+			int beta	= -alpha;
+			bestNext = minMaxAlphaBeta(currState,depth-1,alpha, beta, true);
 			maxDepthReached = depth;
 			long currTime = System.currentTimeMillis();
 			if((currTime - startTime > timeLim) || bestNext.v==GameState.MAX_STATE_VALUE || bestNext.v==GameState.MIN_STATE_VALUE || endSearch) break;
@@ -247,6 +248,7 @@ public class GameTree {
 			boolean maxNotInit = true;
 			
 			if(depth > 0 && (depthLim - depth>=3) && useNullMove){
+				System.out.println("null move");
 				//make null move
 				curr.makeNullMove();
 				TreeNode nullMoveBestNext = minMaxAlphaBeta(curr, depth-1-NULLMOVE_R, alpha, beta, !useNullMove);
@@ -317,6 +319,7 @@ public class GameTree {
 			
 			
 			if(depth>0 && (depthLim - depth>=3) && useNullMove){
+				System.out.println("null move");
 				//make null move
 				curr.makeNullMove();
 				TreeNode nullMoveBestNext = minMaxAlphaBeta(curr, depth-1-NULLMOVE_R, alpha, beta, !useNullMove);

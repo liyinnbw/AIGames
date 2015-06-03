@@ -30,8 +30,8 @@ public class GameTree {
 			else return 1;
 		}
 	}
-	private class TreeNode{
-		public GameState.Move nextMove;
+	public class TreeNode{
+		public Move nextMove;
 		//public int[] livePieces;
 		public int v;
 		public int searchDepth;
@@ -46,6 +46,7 @@ public class GameTree {
 	private ZobristHash hasher;
 	private static boolean ENABLE_HASH = true;
 	private static boolean ENABLE_MOVELIB = false;
+	private static boolean ENABLE_TIMELIM = false;
 	private static final int NULLMOVE_R = 2;	//must be multiples of 2
 	private long startTime;
 	private boolean endSearch;
@@ -115,7 +116,7 @@ public class GameTree {
 		debug = false;
 	}
 	
-	public GameState.Move nextMove(){
+	public Move nextMove(){
 		/*
 		//clean outdated hash
 		int outdatedCount = 0;
@@ -152,15 +153,27 @@ public class GameTree {
 		endSearch = false;
 		
 		TreeNode bestNext = null;
+		
 		startTime = System.currentTimeMillis();
-		for(int depth = 1; ; depth++){
-			depthLim = depth;
-			int alpha 	= -Integer.MAX_VALUE;
-			int beta	= -alpha;
-			bestNext = minMaxAlphaBeta(currState,depth-1,alpha, beta, true);
-			maxDepthReached = depth;
-			long currTime = System.currentTimeMillis();
-			if((currTime - startTime > timeLim) || bestNext.v==GameState.MAX_STATE_VALUE || bestNext.v==GameState.MIN_STATE_VALUE || endSearch) break;
+		if(ENABLE_TIMELIM){
+			for(int depth = 1; ; depth++){
+				depthLim = depth;
+				int alpha 	= -Integer.MAX_VALUE;
+				int beta	= -alpha;
+				bestNext = minMaxAlphaBeta(currState,depth-1,alpha, beta, true);
+				maxDepthReached = depth;
+				long currTime = System.currentTimeMillis();
+				if((currTime - startTime > timeLim) || bestNext.v==GameState.MAX_STATE_VALUE || bestNext.v==GameState.MIN_STATE_VALUE || endSearch) break;
+			}
+		}else{
+			for(int depth = 1; depth<=5; depth++){
+				depthLim = depth;
+				int alpha 	= -Integer.MAX_VALUE;
+				int beta	= -alpha;
+				bestNext = minMaxAlphaBeta(currState,depth-1,alpha, beta, true);
+				maxDepthReached = depth;
+				long currTime = System.currentTimeMillis();
+			}
 		}
 		
 		System.out.println("Reuse saved nodes = "+hmQuerySuccessfulCount+"/"+hm.size()+" max depth reached = "+maxDepthReached+" average branching = "+branchesCount/nodesVisitedCount);
@@ -168,11 +181,11 @@ public class GameTree {
 		hm = null;	//this would immediately trigger garbage collection to release memory
 		return bestNext.nextMove;
 	}
-	public List<GameState.Move> sortMoves(GameState curr, List<GameState.Move> nextPossibleMoves, int side){
+	public List<Move> sortMoves(GameState curr, List<Move> nextPossibleMoves, int side){
 		List<TreeNode> sortable = new ArrayList<TreeNode>();
 		
 		//evaluate all moves
-		for(GameState.Move m : nextPossibleMoves){
+		for(Move m : nextPossibleMoves){
 			curr.makeMove(m);
 			TreeNode t = new TreeNode();
 			t.nextMove = m;
@@ -187,7 +200,7 @@ public class GameTree {
 		}else{
 			Collections.sort(sortable,minComparator);
 		}
-		List<GameState.Move> sortedMoves = new ArrayList<GameState.Move>();
+		List<Move> sortedMoves = new ArrayList<Move>();
 		for(int i=0; i<sortable.size(); i++){
 			sortedMoves.add(sortable.get(i).nextMove);
 		}
@@ -198,7 +211,7 @@ public class GameTree {
 		useNullMove = false;
 		nodesVisitedCount++;
 		
-		GameState.Move previousBest = null;
+		Move previousBest = null;
 		//query hash table
 		if(ENABLE_HASH){	
 			TreeNode queryRoot = hm.get(hasher.hash(curr));
@@ -212,7 +225,7 @@ public class GameTree {
 			}
 		}
 
-		List<GameState.Move> nextPossibleMoves = curr.nextPossibleMoves();
+		List<Move> nextPossibleMoves = curr.nextPossibleMoves();
 		
 		long start = System.currentTimeMillis();
 		//order search by resultant state value
@@ -229,7 +242,7 @@ public class GameTree {
 		
 		TreeNode root = new TreeNode();	//the node to return
 		//root.livePieces = new int[curr.getLivePieces().length];
-		GameState.Move selectedMove = null;		//the state selected
+		Move selectedMove = null;		//the state selected
 		int selectedSearchDepth = 0;
 		if(nextPossibleMoves.size()==0){
 			root.nextMove = null;
@@ -270,7 +283,7 @@ public class GameTree {
 			
 			
 			
-			for(GameState.Move m: nextPossibleMoves){
+			for(Move m: nextPossibleMoves){
 				branchesCount++;
 				
 				curr.makeMove(m);
@@ -305,7 +318,7 @@ public class GameTree {
 				}
 				
 				long currTime = System.currentTimeMillis();
-				if(currTime - startTime > timeLim) break;
+				if(ENABLE_TIMELIM && currTime - startTime > timeLim) break;
 			}
 			root.nextMove = selectedMove;
 			//System.arraycopy(curr.getLivePieces(), 0, root.livePieces, 0, root.livePieces.length);
@@ -340,7 +353,7 @@ public class GameTree {
 			}
 			
 			
-			for(GameState.Move m: nextPossibleMoves){
+			for(Move m: nextPossibleMoves){
 				branchesCount++;
 				
 				curr.makeMove(m);
@@ -374,7 +387,7 @@ public class GameTree {
 					}
 				}
 				long currTime = System.currentTimeMillis();
-				if(currTime - startTime > timeLim) break;
+				if(ENABLE_TIMELIM && currTime - startTime > timeLim) break;
 			}
 			root.nextMove = selectedMove;
 			//System.arraycopy(curr.getLivePieces(), 0, root.livePieces, 0, root.livePieces.length);
@@ -384,6 +397,13 @@ public class GameTree {
 		}
 		if(ENABLE_HASH){
 			hm.put(hasher.hash(curr), root);
+			TreeNode mRoot = new TreeNode();
+			mRoot.nextMove = GameState.getMirrorMove(root.nextMove);
+			mRoot.searchDepth = root.searchDepth;
+			mRoot.v = root.v;
+			curr.mirrorState();
+			hm.put(hasher.hash(curr), mRoot);
+			curr.mirrorState();
 		}
 		return root;
 	}

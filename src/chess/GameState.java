@@ -59,24 +59,7 @@ public class GameState {
 	private int state[];	//[piece id]= location
 	private int currSide;
 	private int[] colMask;	//for extracting bit at specific column of a row
-	public class Move{
-		public int fromR;
-		public int fromC;
-		public int toR;
-		public int toC;
-		public int rmPiec;
-		public Move(int fr, int fc, int tr, int tc, int rm){
-			fromR = fr;
-			fromC = fc;
-			toR   = tr;
-			toC   = tc;
-			rmPiec= rm;
-		}
-		@Override
-		public String toString(){
-			return "from("+fromC+","+fromR+") to("+toC+","+toR+")";
-		}
-	}
+	private int value;
 	private Stack<Move> moves;
 	private static final int power[][] = {
 		{//0: jiang 
@@ -198,6 +181,40 @@ public class GameState {
 	public void setState(int s[]){
 		state = new int[s.length];
 		System.arraycopy(s, 0, state, 0, s.length);
+	}
+	
+	public static int[] getMirrorState(int s[]){
+		int[] mState = new int[s.length];
+		System.arraycopy(s, 0, mState, 0, s.length);
+		int midCol = COLS/2;
+		for(int i=0; i<ROWS; i++){
+			for(int j=0; j<midCol; j++){
+				int tmp = mState[(i<<4)+j];
+				
+				mState[(i<<4)+j] = mState[(i<<4)+COLS-1-j];
+				mState[(i<<4)+COLS-1-j] = tmp;
+			}
+		}
+		return mState;
+	}
+	public void mirrorState(){
+		int midCol = COLS/2;
+		for(int i=0; i<ROWS; i++){
+			for(int j=0; j<midCol; j++){
+				int tmp = state[(i<<4)+j];		
+				state[(i<<4)+j] = state[(i<<4)+COLS-1-j];
+				state[(i<<4)+COLS-1-j] = tmp;
+			}
+		}
+	}
+	public static Move getMirrorMove(Move m){
+		if(m==null) return null;
+		int fr = m.fromR;
+		int fc = COLS-1-m.fromC;
+		int tr = m.toR;
+		int tc = COLS-1-m.toC;
+		int rm = m.rmPiec;
+		return new Move(fr, fc, tr, tc, rm);
 	}
 	public void initState(){
 		state = new int[ROWS*HEX_COLS];	//store piece idx
@@ -687,7 +704,7 @@ public class GameState {
 		return nexts;
 		
 	}
-	
+
 	public int evaluate(){
 		int over = isGameOver();
 		if(over == -1){
@@ -718,10 +735,14 @@ public class GameState {
 	}
 	
 	public int updateValue(Move m){
-		int maxplayerTotal = 0;
-		int minplayerTotal = 0;
+		int maxplayerGain = 0;
+		int minplayerGain = 0;
 		
-		return maxplayerTotal+minplayerTotal;
+		int from 	= (m.fromR<<4) + m.fromC;
+		int to		= (m.toR<<4) + m.toC;
+		int rmPiece	= m.rmPiec;
+		
+		return maxplayerGain+minplayerGain;
 	}
 	
 	public int isGameOver(){
@@ -747,12 +768,12 @@ public class GameState {
 	@Override
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
-		//for(int i=0; i<state.length; i++){
-		//	sb.append(state[i]+"\t");
-		//	if((i & 0xF)==0xF){
-		//		sb.append("\n");
-		//	}
-		//}
+		for(int i=0; i<state.length; i++){
+			sb.append(state[i]+"\t");
+			if((i & 0xF)==0xF){
+				sb.append("\n");
+			}
+		}
 		sb.append("game value ="+evaluate());
 		return sb.toString();
 	}

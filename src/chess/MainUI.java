@@ -86,7 +86,7 @@ public class MainUI extends JPanel{
 		   return;
 	   }else{
 		   long start = System.currentTimeMillis();
-		   GameState.Move nextBestMove = agent.nextMove();
+		   Move nextBestMove = agent.nextMove();
 		   long end = System.currentTimeMillis();
 		   System.out.println("ai move = "+nextBestMove+" move calculation time = "+(end-start)/1000.0+" s");
 		   gameState.makeMove(nextBestMove);

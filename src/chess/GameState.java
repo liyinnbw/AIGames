@@ -58,8 +58,6 @@ public class GameState {
 	
 	private int state[];	//[piece id]= location
 	private int currSide;
-	private int[] colMask;	//for extracting bit at specific column of a row
-	private int value;
 	private Stack<Move> moves;
 	private static final int power[][] = {
 		{//0: jiang 
@@ -241,43 +239,7 @@ public class GameState {
 							
 		state[9*HEX_COLS+0] = C1;	state[9*HEX_COLS+1] = M1;	state[9*HEX_COLS+2] = X1;	state[9*HEX_COLS+3] = S1;	state[9*HEX_COLS+4] = J1;	state[9*HEX_COLS+5] = S1;	state[9*HEX_COLS+6] = X1;	state[9*HEX_COLS+7] = M1;	state[9*HEX_COLS+8] = C1;
 	}
-	/*
-	//virtual gameboard rows = ROWS, cols = 16
-	public void initState(){
-		state = new int[PIECE_TYPES*2][5];	//store piece idx
-		for(int i=0; i<state.length; i++){
-			for(int j=0; j<5; j++){
-				state[i][j]=UNOCCUPIED;				//<0 means no data or out of bound
-			}
-		}
-		
-		//0: jiang 	1 piece
-		//1: shi	2 pieces
-		//2: xiang	2 pieces
-		//3: ma		2 pieces
-		//4: che	2 pieces
-		//5: pao	2 pieces
-		//6: zu		5 pieces
-		
-		//max piece   pos					min piece   							pos
-		state[0][0] = 4; 					state[MIN_PLAYER*PIECE_TYPES+0 ][0] = (ROWS-1)*VIRTUAL_COLS+4;
-		state[1][0] = 3;					state[MIN_PLAYER*PIECE_TYPES+1 ][0] = (ROWS-1)*VIRTUAL_COLS+3;
-		state[1][1] = 5;					state[MIN_PLAYER*PIECE_TYPES+1 ][1] = (ROWS-1)*VIRTUAL_COLS+5;
-		state[2][0] = 2;					state[MIN_PLAYER*PIECE_TYPES+2 ][0] = (ROWS-1)*VIRTUAL_COLS+2;
-		state[2][1] = 6;					state[MIN_PLAYER*PIECE_TYPES+2 ][1] = (ROWS-1)*VIRTUAL_COLS+6;
-		state[3][0] = 1;					state[MIN_PLAYER*PIECE_TYPES+3 ][0] = (ROWS-1)*VIRTUAL_COLS+1;
-		state[3][1] = 7;					state[MIN_PLAYER*PIECE_TYPES+3 ][1] = (ROWS-1)*VIRTUAL_COLS+7;
-		state[4][0] = 0;					state[MIN_PLAYER*PIECE_TYPES+4 ][0] = (ROWS-1)*VIRTUAL_COLS+0;
-		state[4][1] = 8;					state[MIN_PLAYER*PIECE_TYPES+4 ][1] = (ROWS-1)*VIRTUAL_COLS+8;
-		state[5][0] = 2*VIRTUAL_COLS+1;		state[MIN_PLAYER*PIECE_TYPES+5 ][0] = (ROWS-3)*VIRTUAL_COLS+1;
-		state[5][1] = 2*VIRTUAL_COLS+7;		state[MIN_PLAYER*PIECE_TYPES+5 ][1] = (ROWS-3)*VIRTUAL_COLS+7;
-		state[6][0] = 3*VIRTUAL_COLS;		state[MIN_PLAYER*PIECE_TYPES+6 ][0] = (ROWS-4)*VIRTUAL_COLS;
-		state[6][1] = 3*VIRTUAL_COLS+2;		state[MIN_PLAYER*PIECE_TYPES+6 ][1] = (ROWS-4)*VIRTUAL_COLS+2;
-		state[6][2] = 3*VIRTUAL_COLS+4;		state[MIN_PLAYER*PIECE_TYPES+6 ][2] = (ROWS-4)*VIRTUAL_COLS+4;
-		state[6][3] = 3*VIRTUAL_COLS+6;		state[MIN_PLAYER*PIECE_TYPES+6 ][3] = (ROWS-4)*VIRTUAL_COLS+6;
-		state[6][4] = 3*VIRTUAL_COLS+8;		state[MIN_PLAYER*PIECE_TYPES+6 ][4] = (ROWS-4)*VIRTUAL_COLS+8;
-	}
-	*/
+
 	public void initMoves(){
 		moves = new Stack<Move>();
 	}
@@ -287,17 +249,6 @@ public class GameState {
 		initState();
 		initMoves();
 	}
-	/*
-	public GameState(int r, int c, int side, int[][] state, Stack<Point> moves){//, int[][][][] value){
-		setRows(r);
-		setCols(c);
-		setCurrSide(side);
-		setGameState(state);
-		setMoves(moves);
-		//setValue (value);
-
-	}
-	*/
 	
 	//precon: move is within board
 	public boolean isJMove(int fromR, int fromC, int toR, int toC){
@@ -734,15 +685,38 @@ public class GameState {
 
 	}
 	
-	public int updateValue(Move m){
+	public int evaluateChange(Move m){
 		int maxplayerGain = 0;
 		int minplayerGain = 0;
 		
 		int from 	= (m.fromR<<4) + m.fromC;
 		int to		= (m.toR<<4) + m.toC;
+		if(state[to]==J) return MIN_STATE_VALUE;
+		if(state[to]==J1) return MAX_STATE_VALUE;
 		int rmPiece	= m.rmPiec;
 		
-		return maxplayerGain+minplayerGain;
+		//this should not happen
+		if(rmPiece!=state[to] || state[from] == UNOCCUPIED){
+			System.out.println("ERROR: not valid remove");
+			return 0; 
+		}
+		
+		
+		//row flip
+		int fromRf 	= ROWS-1-m.fromR;
+		int toRf	= ROWS-1-m.toR;
+		int fromf	= (fromRf<<4)+m.fromC;
+		int tof		= (toRf<<4)+m.toC;
+		
+		if(state[from]<PIECE_TYPES){	
+			maxplayerGain = power[state[from]][tof]-power[state[from]][fromf];
+			minplayerGain = (state[to]==UNOCCUPIED)?0:-power[state[to]-PIECE_TYPES][to];
+		}else{
+			minplayerGain = power[state[from]-PIECE_TYPES][to]-power[state[from]-PIECE_TYPES][from];
+			maxplayerGain = (state[to]==UNOCCUPIED)?0:-power[state[to]][tof];
+		}
+		
+		return maxplayerGain-minplayerGain;
 	}
 	
 	public int isGameOver(){
@@ -769,7 +743,7 @@ public class GameState {
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
 		for(int i=0; i<state.length; i++){
-			sb.append(state[i]+"\t");
+			sb.append(state[i]+",\t");
 			if((i & 0xF)==0xF){
 				sb.append("\n");
 			}

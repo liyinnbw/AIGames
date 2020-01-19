@@ -19,7 +19,7 @@ public class MainUI extends JPanel{
    public int Y_OFFSET;
    public int SEARCH_TIME;	//in miliseconds
    public GameState gameState;
-   public GameTree agent;
+
    public MainUI(){
 	   X_OFFSET=8;
 	   Y_OFFSET=30;
@@ -33,7 +33,6 @@ public class MainUI extends JPanel{
    }
    private void newGame(){
 	   gameState = new GameState(GRID_ROWS,GRID_COLS,GameState.MAX_PLAYER);
-	   agent = new GameTree(gameState, SEARCH_TIME);
    }
    private Point posOnGrid(Point p){
 	   Point pos = new Point((int)((p.getX()-XO+UNIT/2.0)/UNIT),(int)((p.getY()-YO+UNIT/2.0)/UNIT));
@@ -43,13 +42,7 @@ public class MainUI extends JPanel{
 	   Point pos = new Point((int)(p.getX()*UNIT+XO),(int)(p.getY()*UNIT+YO));
 	   return pos;
    }
-   public void agentMove(){
-	   long start = System.currentTimeMillis();
-	   Point nextBestMove = agent.nextMove();
-	   long end = System.currentTimeMillis();
-	   System.out.println("ai move = "+nextBestMove+" move calculation time = "+(end-start)/1000.0+" s");
-	   gameState.addPiece((int)nextBestMove.getX(), (int)nextBestMove.getY());
-   }
+
    @Override
    public void paint (Graphics g) {
 	   super.paintComponent(g);			//this will clear the current frame
@@ -104,6 +97,15 @@ public class MainUI extends JPanel{
    public static void main(String[] args){
 	  final JFrame mainFrame = new JFrame("Five In A Row");
 	  final MainUI gameboard = new MainUI();
+	  final JPanel statusPanel = new JPanel();
+	//   statusPanel.setBorder(new BevelBorder(BevelBorder.LOWERED));
+	  mainFrame.add(statusPanel, BorderLayout.SOUTH);
+	  statusPanel.setPreferredSize(new Dimension(mainFrame.getWidth(), 32));
+	  statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.X_AXIS));
+	  JLabel statusLabel = new JLabel("<html><div style='text-align: center;'>Your turn. Press [Backspace] to revert a step.</div></html>");
+	  statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
+	  statusPanel.add(statusLabel);
+
 	  mainFrame.setSize(gameboard.XO*2+gameboard.GRID_COLS*gameboard.UNIT-gameboard.UNIT,
 			  			gameboard.YO*2+gameboard.GRID_ROWS*gameboard.UNIT-gameboard.UNIT);
 	  mainFrame.addWindowListener(new WindowAdapter() {
@@ -118,8 +120,12 @@ public class MainUI extends JPanel{
 	    	}else{
 		        Point p = gameboard.posOnGrid(e.getPoint());
 		        if(gameboard.gameState.addPiece((int)p.getX(), (int)p.getY())){
-		        	System.out.println("mouse click "+p);
-
+					System.out.println("mouse click "+p);
+					
+					//paint immediately so that user input is reflected
+					// gameboard.paintImmediately(gameboard.getBounds());
+					
+					
 			        int over = gameboard.gameState.isGameOver();
 			        if(over!=-1){
 			        	String message;
@@ -130,23 +136,49 @@ public class MainUI extends JPanel{
 			        	if(input == JOptionPane.OK_OPTION)
 			        	{
 			        		gameboard.newGame();
-			        	}
+						}
+						
 			        }else{
-			        	gameboard.agentMove();
-			        	over = gameboard.gameState.isGameOver();
-				        if(over!=-1){
-				        	String message;
-				        	if(over==gameboard.gameState.MAX_PLAYER) message = "Black Win";
-				        	else if(over==gameboard.gameState.MIN_PLAYER) message = "White Win";
-				        	else message = "Tie";
-				        	int input = JOptionPane.showOptionDialog(mainFrame, message, "Message",JOptionPane.OK_OPTION, JOptionPane.INFORMATION_MESSAGE,null,null,null);
-				        	if(input == JOptionPane.OK_OPTION)
-				        	{
-				        		gameboard.newGame();
-				        		
-				        	}
-				        }
-			        }
+						statusLabel.setText("<html><div style='text-align: center;'>AI Thinking...</div></html>");
+						new SwingWorker<Void, Void>() {
+							@Override
+							protected void done() {
+								// update UI
+								int over = gameboard.gameState.isGameOver();
+								if(over!=-1){
+									String message;
+									if(over==gameboard.gameState.MAX_PLAYER) message = "Black Win";
+									else if(over==gameboard.gameState.MIN_PLAYER) message = "White Win";
+									else message = "Tie";
+									int input = JOptionPane.showOptionDialog(mainFrame, message, "Message",JOptionPane.OK_OPTION, JOptionPane.INFORMATION_MESSAGE,null,null,null);
+									if(input == JOptionPane.OK_OPTION)
+									{
+										gameboard.newGame();
+									}
+								}
+								statusLabel.setText("<html><div style='text-align: center;'>Your turn. Press [Backspace] to revert a step.</div></html>");
+								gameboard.repaint();
+							}
+
+							@Override
+							protected Void doInBackground() throws Exception {
+								//copy state so that it does not affect drawing
+								GameState gameState = new GameState(gameboard.GRID_ROWS,gameboard.GRID_COLS,GameState.MAX_PLAYER);
+								gameState.setGameState(gameboard.gameState.getGameState());
+	  							GameTree agent = new GameTree(gameState, gameboard.SEARCH_TIME);
+								
+								//do work
+								long start = System.currentTimeMillis();
+								Point nextBestMove = agent.nextMove();
+								long end = System.currentTimeMillis();
+								System.out.println("ai move = "+nextBestMove+" move calculation time = "+(end-start)/1000.0+" s");
+
+								//update current game state
+								gameboard.gameState.addPiece((int)nextBestMove.getX(), (int)nextBestMove.getY());
+								return null;
+							}
+						}.execute();
+					}
 			        gameboard.repaint();
 		        } 
 	    	}

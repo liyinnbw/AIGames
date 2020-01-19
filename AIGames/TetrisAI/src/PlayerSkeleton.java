@@ -415,71 +415,40 @@ public class PlayerSkeleton {
 		//double[] bestWeights= {-0.99, -0.61, 0.0, -0.1, -0.23};
 		
 		//so far best weights for evaluate0
-		
-		/* Original method before Wen Xia try lotus swarm
-		
 		double[] bestWeights= {-0.3742081579506406, -0.054361049924312226, -0.34281777852976386, -0.19754856202244633, -0.687821687911777};
 		
 		int best=0;
 		while(true){
 			//Run once
 			int result = runOnce(bestWeights,true);
-			System.out.print("score = "+result);
+			System.out.print("score = "+result+" ");
 			if(result>best) best =result;
 			System.out.println("best = "+best);
 		}
-		*/
 		
-		// Test for lotus swarm
-		int best=0;
-		double[] roof = {0,0,0,0,1};
-		double[] floor = {-1,-1,-1,-1,-1};
-		long startTime = System.currentTimeMillis();
-		lotusSwarm(roof,0,roof,floor);
 		
-		double[] bestWeights= result_particle;
-		int threshold_test = 10;
-		long estimatedTime = System.currentTimeMillis() - startTime;
-		System.out.println("time = "+estimatedTime/1000.0+" s");
-		System.out.println("best particle: ");
-        System.out.println(printArrDouble(result_particle));
+		// // Test for lotus swarm
+		// int best=0;
+		// double[] roof = {0,0,0,0,1};
+		// double[] floor = {-1,-1,-1,-1,-1};
+		// long startTime = System.currentTimeMillis();
+		// lotusSwarm(roof,0,roof,floor);
+		
+		// double[] bestWeights= result_particle;
+		// int threshold_test = 10;
+		// long estimatedTime = System.currentTimeMillis() - startTime;
+		// System.out.println("time = "+estimatedTime/1000.0+" s");
+		// System.out.println("best particle: ");
+        // System.out.println(printArrDouble(result_particle));
 		
 
-		for(int i = 0;i<threshold_test;i++){
-			int result = runOnce(bestWeights,false);
-			System.out.print("result score = "+result + "  ");
-			if(result>best) best =result;
-			System.out.println("result best = "+best);
-		}		
+		// for(int i = 0;i<threshold_test;i++){
+		// 	int result = runOnce(bestWeights,false);
+		// 	System.out.print("result score = "+result + "  ");
+		// 	if(result>best) best =result;
+		// 	System.out.println("result best = "+best);
+		// }		
 		
-		/*
-		//test
-	 	Scanner sc = new Scanner(System.in);
-		int testRunSize = sc.nextInt();
-		int runTimes = 50;
-		int bestScore= 0;
-		for(int i=0; i<runTimes; i++){
-			bestScore += runOnce(bestWeights,false)*1.0/runTimes;
-		}
-		System.out.println("mean score = "+bestScore);
-		while(testRunSize-->0){
-			double[] weights = mutate(bestWeights);
-			System.out.println("try = "+printArrDouble(weights));
-			int meanScore = 0;
-			
-			for(int i=0; i<runTimes; i++){
-				meanScore += runOnce(weights,false)*1.0/runTimes;
-			}
-			System.out.println("mean score = "+meanScore);
-			if(meanScore>bestScore) {
-				bestScore = meanScore;
-				bestWeights = weights;
-				System.out.println("updated weight = "+printArrDouble(bestWeights));
-			}
-		
-		}
-		System.out.println("best score = "+bestScore);
-		System.out.println("best weight = "+printArrDouble(bestWeights));*/
 	}
 	
 }

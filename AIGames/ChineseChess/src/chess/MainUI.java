@@ -43,34 +43,34 @@ public class MainUI extends JPanel{
    }
    private void initChessImages(){
 	   chessImgs = new Image[4][PIECE_TYPES];
-	   chessImgs[0][0] = Toolkit.getDefaultToolkit().getImage("img/_jiang.png");
-	   chessImgs[0][1] = Toolkit.getDefaultToolkit().getImage("img/_shi.png");
-	   chessImgs[0][2] = Toolkit.getDefaultToolkit().getImage("img/_xiang.png");
-	   chessImgs[0][3] = Toolkit.getDefaultToolkit().getImage("img/_ma.png");
-	   chessImgs[0][4] = Toolkit.getDefaultToolkit().getImage("img/_che.png");
-	   chessImgs[0][5] = Toolkit.getDefaultToolkit().getImage("img/_pao.png");
-	   chessImgs[0][6] = Toolkit.getDefaultToolkit().getImage("img/_zu.png");
-	   chessImgs[1][0] = Toolkit.getDefaultToolkit().getImage("img/SHUAI.png");
-	   chessImgs[1][1] = Toolkit.getDefaultToolkit().getImage("img/SHI.png");
-	   chessImgs[1][2] = Toolkit.getDefaultToolkit().getImage("img/XIANG.png");
-	   chessImgs[1][3] = Toolkit.getDefaultToolkit().getImage("img/MA.png");
-	   chessImgs[1][4] = Toolkit.getDefaultToolkit().getImage("img/CHE.png");
-	   chessImgs[1][5] = Toolkit.getDefaultToolkit().getImage("img/PAO.png");
-	   chessImgs[1][6] = Toolkit.getDefaultToolkit().getImage("img/BING.png");
-	   chessImgs[2][0] = Toolkit.getDefaultToolkit().getImage("img/_jiang_1.png");
-	   chessImgs[2][1] = Toolkit.getDefaultToolkit().getImage("img/_shi_1.png");
-	   chessImgs[2][2] = Toolkit.getDefaultToolkit().getImage("img/_xiang_1.png");
-	   chessImgs[2][3] = Toolkit.getDefaultToolkit().getImage("img/_ma_1.png");
-	   chessImgs[2][4] = Toolkit.getDefaultToolkit().getImage("img/_che_1.png");
-	   chessImgs[2][5] = Toolkit.getDefaultToolkit().getImage("img/_pao_1.png");
-	   chessImgs[2][6] = Toolkit.getDefaultToolkit().getImage("img/_zu_1.png");
-	   chessImgs[3][0] = Toolkit.getDefaultToolkit().getImage("img/SHUAI_1.png");
-	   chessImgs[3][1] = Toolkit.getDefaultToolkit().getImage("img/SHI_1.png");
-	   chessImgs[3][2] = Toolkit.getDefaultToolkit().getImage("img/XIANG_1.png");
-	   chessImgs[3][3] = Toolkit.getDefaultToolkit().getImage("img/MA_1.png");
-	   chessImgs[3][4] = Toolkit.getDefaultToolkit().getImage("img/CHE_1.png");
-	   chessImgs[3][5] = Toolkit.getDefaultToolkit().getImage("img/PAO_1.png");
-	   chessImgs[3][6] = Toolkit.getDefaultToolkit().getImage("img/BING_1.png");
+	   chessImgs[0][0] = new ImageIcon(this.getClass().getResource("../img/_jiang.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/_jiang.png");
+	   chessImgs[0][1] = new ImageIcon(this.getClass().getResource("../img/_shi.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/_shi.png");
+	   chessImgs[0][2] = new ImageIcon(this.getClass().getResource("../img/_xiang.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/_xiang.png");
+	   chessImgs[0][3] = new ImageIcon(this.getClass().getResource("../img/_ma.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/_ma.png");
+	   chessImgs[0][4] = new ImageIcon(this.getClass().getResource("../img/_che.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/_che.png");
+	   chessImgs[0][5] = new ImageIcon(this.getClass().getResource("../img/_pao.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/_pao.png");
+	   chessImgs[0][6] = new ImageIcon(this.getClass().getResource("../img/_zu.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/_zu.png");
+	   chessImgs[1][0] = new ImageIcon(this.getClass().getResource("../img/SHUAI.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/SHUAI.png");
+	   chessImgs[1][1] = new ImageIcon(this.getClass().getResource("../img/SHI.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/SHI.png");
+	   chessImgs[1][2] = new ImageIcon(this.getClass().getResource("../img/XIANG.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/XIANG.png");
+	   chessImgs[1][3] = new ImageIcon(this.getClass().getResource("../img/MA.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/MA.png");
+	   chessImgs[1][4] = new ImageIcon(this.getClass().getResource("../img/CHE.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/CHE.png");
+	   chessImgs[1][5] = new ImageIcon(this.getClass().getResource("../img/PAO.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/PAO.png");
+	   chessImgs[1][6] = new ImageIcon(this.getClass().getResource("../img/BING.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/BING.png");
+	   chessImgs[2][0] = new ImageIcon(this.getClass().getResource("../img/_jiang_1.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/_jiang_1.png");
+	   chessImgs[2][1] = new ImageIcon(this.getClass().getResource("../img/_shi_1.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/_shi_1.png");
+	   chessImgs[2][2] = new ImageIcon(this.getClass().getResource("../img/_xiang_1.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/_xiang_1.png");
+	   chessImgs[2][3] = new ImageIcon(this.getClass().getResource("../img/_ma_1.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/_ma_1.png");
+	   chessImgs[2][4] = new ImageIcon(this.getClass().getResource("../img/_che_1.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/_che_1.png");
+	   chessImgs[2][5] = new ImageIcon(this.getClass().getResource("../img/_pao_1.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/_pao_1.png");
+	   chessImgs[2][6] = new ImageIcon(this.getClass().getResource("../img/_zu_1.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/_zu_1.png");
+	   chessImgs[3][0] = new ImageIcon(this.getClass().getResource("../img/SHUAI_1.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/SHUAI_1.png");
+	   chessImgs[3][1] = new ImageIcon(this.getClass().getResource("../img/SHI_1.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/SHI_1.png");
+	   chessImgs[3][2] = new ImageIcon(this.getClass().getResource("../img/XIANG_1.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/XIANG_1.png");
+	   chessImgs[3][3] = new ImageIcon(this.getClass().getResource("../img/MA_1.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/MA_1.png");
+	   chessImgs[3][4] = new ImageIcon(this.getClass().getResource("../img/CHE_1.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/CHE_1.png");
+	   chessImgs[3][5] = new ImageIcon(this.getClass().getResource("../img/PAO_1.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/PAO_1.png");
+	   chessImgs[3][6] = new ImageIcon(this.getClass().getResource("../img/BING_1.png")).getImage(); //Toolkit.getDefaultToolkit().getImage("../img/BING_1.png");
 	   
    }
    private Point posOnGrid(Point p){
@@ -139,10 +139,20 @@ public class MainUI extends JPanel{
    }
    
    public static void main(String[] args){
-	  final JFrame mainFrame = new JFrame("Five In A Row");
+	  final JFrame mainFrame = new JFrame("Chinese Chess");
 	  final MainUI gameboard = new MainUI();
 	  mainFrame.setSize(gameboard.XO*2+gameboard.GRID_COLS*gameboard.UNIT-gameboard.UNIT,
-			  			gameboard.YO*2+gameboard.GRID_ROWS*gameboard.UNIT-gameboard.UNIT);
+						  gameboard.YO*2+gameboard.GRID_ROWS*gameboard.UNIT-gameboard.UNIT);
+
+	  final JPanel statusPanel = new JPanel();
+	  //   statusPanel.setBorder(new BevelBorder(BevelBorder.LOWERED));
+	  mainFrame.add(statusPanel, BorderLayout.SOUTH);
+	  statusPanel.setPreferredSize(new Dimension(mainFrame.getWidth(), 16));
+	  statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.X_AXIS));
+	  JLabel statusLabel = new JLabel("<html><div style='text-align: center;'>Your turn. Press [Backspace] to revert a step.</div></html>");
+	  statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
+	  statusPanel.add(statusLabel);
+	
 	  mainFrame.addWindowListener(new WindowAdapter() {
 	     public void windowClosing(WindowEvent windowEvent){
 	        System.exit(0);
@@ -178,19 +188,50 @@ public class MainUI extends JPanel{
 				        		gameboard.newGame();
 				        	}
 				        }else{
-				        	gameboard.agentMove();
-				        	over = gameboard.gameState.isGameOver();
-				        	if(over!=-1){
-					        	String message;
-					        	if(over==gameboard.gameState.MAX_PLAYER) message = "Black Win";
-					        	else if(over==gameboard.gameState.MIN_PLAYER) message = "Red Win";
-					        	else message = "Tie";
-					        	int input = JOptionPane.showOptionDialog(mainFrame, message, "Message",JOptionPane.OK_OPTION, JOptionPane.INFORMATION_MESSAGE,null,null,null);
-					        	if(input == JOptionPane.OK_OPTION)
-					        	{
-					        		gameboard.newGame();
-					        	}
-					        }
+							statusLabel.setText("<html><div style='text-align: center;'>AI Thinking...</div></html>");
+							new SwingWorker<Void, Void>() {
+								@Override
+								protected void done() {
+									// update UI
+									int over = gameboard.gameState.isGameOver();
+									if(over!=-1){
+										String message;
+										if(over==gameboard.gameState.MAX_PLAYER) message = "Black Win";
+										else if(over==gameboard.gameState.MIN_PLAYER) message = "Red Win";
+										else message = "Tie";
+										int input = JOptionPane.showOptionDialog(mainFrame, message, "Message",JOptionPane.OK_OPTION, JOptionPane.INFORMATION_MESSAGE,null,null,null);
+										if(input == JOptionPane.OK_OPTION)
+										{
+											gameboard.newGame();
+										}
+									}
+									statusLabel.setText("<html><div style='text-align: center;'>Your turn. Press [Backspace] to revert a step.</div></html>");
+									gameboard.repaint();
+								}
+	
+								@Override
+								protected Void doInBackground() throws Exception {
+									//copy state so that it does not affect drawing
+									GameState gameState = new GameState(gameboard.GRID_ROWS, gameboard.GRID_COLS, startSide);
+									gameState.setState(gameboard.gameState.getGameState());
+									gameState.setCurrSide(gameboard.gameState.getCurrSide());
+									GameTree agent = new GameTree(gameState, gameboard.SEARCH_TIME);
+									
+									//do work
+									long start = System.currentTimeMillis();
+									Move nextBestMove = agent.nextMove();
+									long end = System.currentTimeMillis();
+									System.out.println("ai move = "+nextBestMove+" move calculation time = "+(end-start)/1000.0+" s");
+
+									//update current game state
+									gameboard.gameState.makeMove(nextBestMove);
+
+									return null;
+								}
+							}.execute();
+
+				        	// gameboard.agentMove();
+				        	
 				        }
 		        	}
 		        	gameboard.selectedPos = null;
